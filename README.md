@@ -1,4 +1,4 @@
-# vue-router
+# vue-page
 
 Routing plugin for Vue.js (v0.11). Based on Vue.js Guide about routing and using pagejs.
 
