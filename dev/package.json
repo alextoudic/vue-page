@@ -1,0 +1,20 @@
+{
+  "name": "vue-page",
+  "version": "0.1.0",
+  "description": "A Vue.js plugin wrapping pagejs.",
+  "keywords": [
+    "vue",
+    "routing",
+    "pagejs"
+  ],
+  "license": "MIT",
+  "devDependencies": {},
+  "dependencies": {
+    "page": "^1.4.1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/AlexToudic/vue-page.git"
+  },
+  "main": "src/index.js"
+}

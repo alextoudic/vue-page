@@ -1,0 +1,133 @@
+@import 'nib'
+
+global-reset()
+
+$baseColor = #0099FF
+$darkerColor = #1A4C80
+
+*
+  box-sizing border-box
+
+a
+  text-decoration none
+
+button
+  z-index 1
+
+  position relative
+
+  padding 15px
+  margin-top 15px
+
+  font-size 14px
+  color white
+
+  text-transform uppercase
+
+  background none
+  border 1px solid white
+
+  border-radius 0
+
+  cursor pointer
+
+  transition color 0.3s
+
+  &:after
+    content ''
+
+    z-index -1
+  
+    absolute top 0 left 0
+
+    width 100%
+    height 100%
+
+    background white
+
+    transform-origin 0 0
+    transform scaleY(0)
+
+    transition transform 0.3s
+
+  &:hover
+    color $baseColor
+
+    &:after
+      transform scaleY(1)
+
+h1
+  font-size 20px
+  font-weight 700
+
+  text-transform uppercase
+
+html
+  font-family 'Roboto', sans-serif
+
+html,
+body
+  width 100%
+  height 100%
+
+body
+  color white
+
+  background $baseColor
+
+.container
+  margin 0 auto
+  padding 20px
+
+  max-width 1200px
+
+nav
+  width 100%
+
+  a
+    display inline-block
+    position relative
+    
+    margin-right 20px
+    padding-top 10px
+    padding-bottom 6px
+    
+    color white
+    
+    text-align center
+
+    &:after
+      content ''
+
+      display block
+      absolute bottom 0 left 0
+
+      width 100%
+      height 2px
+
+      background white
+
+      transform-origin 0
+      transform scaleX(0)
+      
+      transition transform 0.3s
+
+    &:hover
+      &:after
+        transform scaleX(1)
+
+#app
+  position relative
+
+.page
+  absolute top 0 left 0
+
+  padding-top 20px
+
+span
+  display inline-block
+
+  opacity 0
+
+p
+  margin 30px 20px

@@ -1,0 +1,37 @@
+{
+  "folders": {
+    "source": "./app",
+    "temp": "./.server",
+    "build": "./public"
+  },
+  "defaultTasks": [
+    "watch"
+  ],
+  "browsersync": {
+    "server": {
+      "pushRewrite": true
+    }
+  },
+  "copy": {
+    "extensions": [
+      ".json",
+      ".png",
+      ".svg",
+      ".jpg",
+      ".mp3",
+      ".wav"
+    ]
+  },
+  "jade": {
+    "locals": {}
+  },
+  "browserify": {
+    "extensions": [
+      ".js"
+    ]
+  },
+  "stylus": {
+    "nib": true
+  },
+  "sass": false
+}
