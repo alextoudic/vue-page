@@ -2,41 +2,44 @@
 
 Routing plugin for Vue.js (v0.11). Based on Vue.js Guide about routing and using pagejs.
 
-Basically, this plugin is just a wrapper for pagejs. It creates a global ViewModel in which your components will be rendered using v-component and v-transition so you can define methods which will be called before enter, on enter and/or on leave.
+Basically, this plugin is just a wrapper for pagejs. It creates a global ViewModel in which your components will be rendered using v-component, v-transition so you can define methods which will be called before enter, on enter and/or on leave and v-with so you can get url params.
 
 ### Getting started
 
 First install the plugin
 
-`npm install vue-page --save`
+```
+npm install vue-page --save
+```
 
 ### Initialize
 
-Then initialize the plugin with your routes (see [pagejs](http://visionmedia.github.io/page.js) for more info on routes).
+Then initialize the plugin with your routes (see [pagejs](http://visionmedia.github.io/page.js) for more infos on routes). Note that the routes initialization is a little bit different from the pagejs one because I wanted to allow url "nesting".
+Each string value which are affected to properties are names of v-component instances.
 
 ```javascript
-  var Vue     = require('Vue'),
-      vuePage = require('vue-page');
+var Vue     = require('Vue'),
+    vuePage = require('vue-page');
 
-  Vue.use(vuePage, {
-    rootElement: '#app', //element in which the components will injected
-    class: 'page', //class of the components' wrappers (default is view)
-    base: '/base', //optionnal
-    routes: {
-      '/fr': {
-        '/accueil': 'home',
-        '/a-propos': 'about'
-      },
-      '/en': {
-        '/home': 'home',
-        '/about': 'about',
-      },
-      '/page/:id': 'pageId',
-      '/hello/:name': 'greetings',
-      '*': 'lost' //not found
+Vue.use(vuePage, {
+  rootElement: '#app', //element in which the components will injected
+  class: 'page', //class of the components' wrappers (default is view)
+  base: '/base', //optionnal
+  routes: {
+    '/fr': {
+      '/accueil': 'home',
+      '/a-propos': 'about'
     },
-    default: '/base/en/home' //redirection for '/' if needed
-  });
+    '/en': {
+      '/home': 'home',
+      '/about': 'about',
+    },
+    '/page/:id': 'pageId',
+    '/hello/:name': 'greetings',
+    '*': 'lost' //not found
+  },
+  default: '/base/en/home' //redirection for '/' if needed
+});
 ```
 
 This configuration will create the following routes (on right are the components names):
@@ -55,65 +58,67 @@ This configuration will create the following routes (on right are the components
 
 '*' -> 'lost'
 
-Each component have to be defined in Vue.
+Each component have to be defined if you don't want a warning.
+
+Two differents url can load the same template. In this example /base/fr/accueil and /base/en/home both load the home component. This way, my french and english users will both have a url in their language but I will only make my template and controller one time. I'm sure you'll find a lot of cases in which you want something like that too.
 
 ### Usage
 
-This plugin won't force you to implement your components with any specific syntax. Moreover, it allows you to define methods which will be fired by v-transition.
+This plugin won't force you to implement your components with any specific syntax. Moreover, it allows you to define methods which will be called by v-transition.
 
 ```javascript
-  var Vue      = require('Vue'),
-      TweenMax = require('TweenMax');
-  var template = require('./template.html');
+var Vue      = require('Vue'),
+    TweenMax = require('TweenMax');
+var template = require('./template.html');
 
-  module.exports = Vue.component('home', {
-    template: template,
-    events: {
-      'router:update': function () {
-        console.log('url changed');
-      }
-    },
-    methods: { 
-      helloVue: function () {
-        Vue.router.show('/hello/VueJS');
-      },
-
-      beforeEnter: function () {
-        TweenMax.set(this.$el, {
-          x: -window.innerWidth/2
-        });
-      },
-      enter: function (cb) {
-        TweenMax.to(this.$el, 0.8, {
-          x: 0,
-          onComplete: cb
-        });
-      },
-      leave: function (cb) {
-        TweenMax.to(this.$el, 0.8, {
-          x: -window.innerWidth/2,
-          onComplete: cb
-        });
-      }
+module.exports = Vue.component('home', {
+  template: template,
+  events: {
+    'router:update': function () {
+      console.log('url changed');
     }
-  });
+  },
+  methods: { 
+    helloVue: function () {
+      Vue.page.show('/hello/VueJS');
+    },
+
+    beforeEnter: function () {
+      TweenMax.set(this.$el, {
+        x: -window.innerWidth/2
+      });
+    },
+    enter: function (cb) {
+      TweenMax.to(this.$el, 0.8, {
+        x: 0,
+        onComplete: cb
+      });
+    },
+    leave: function (cb) {
+      TweenMax.to(this.$el, 0.8, {
+        x: -window.innerWidth/2,
+        onComplete: cb
+      });
+    }
+  }
+});
 ```
 
 As you can see in this component example, the plugin fires events. On startup, it fires 'router:start' and on each url change 'router:update'. So you can listen those events to do whatever you want.
 
-You can also define beforeEnter, enter and leave as methods but they're all optionnal. It becomes pretty handy if you want fancy transitions between your pages. For enter and leave don't forget to call the callbacks, the world won't collapse but your DOM will be dirty as v-transition uses it to clean up.
+You can also define beforeEnter, enter and leave as methods but they're all optionnal. It becomes pretty handy if you want fancy transitions between your pages. For enter and leave don't forget to call the callbacks, the world won't collapse if you don't but your DOM will be dirty as v-transition uses it to clean up.
 
-You also have a Vue.router.show method which call the pagejs method so you can redirect your user on a other url.
+You also have a Vue.page.show method which call the pagejs show method so you can redirect your user on an other url.
 
 ### Params
 
-All property from pagejs context are in cloned in a context property on your component using v-with. Thanks to that, if I go to /hello/world which fires /hello/:name and call my greetings component, I will be able to use name in my template as following
+All properties from pagejs context can be found in a context property on your component which is set using v-with. Thanks to that, if I go to /hello/world which fires the url /hello/:name and call my greetings component, I will be able to use name in my template as following
 
 ```html
 <h1>Hello {{context.params.name}}</h1>
 ```
 
-And of course, it doesn't need any specific development in my component instanciation
+And of course, it doesn't need any specific development in my component instantiation
 
 ```javascript
 var Vue = require('Vue');
@@ -148,4 +153,6 @@ module.exports = Vue.component('greetings', {
 
 See, nothing but animations.
 
-One more time, you should see [pagejs documentation](http://visionmedia.github.io/page.js/) to know what properties you can get from context.
+This context object also contains infos about the url so if you two urls which call the same component, you can easily know the url used to open it.
+
+You should look at the [pagejs documentation](http://visionmedia.github.io/page.js/) to know what other properties you can get from context.

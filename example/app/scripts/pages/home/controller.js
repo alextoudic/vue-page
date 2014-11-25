@@ -11,7 +11,7 @@ module.exports = Vue.component('home', {
   },
   methods: { 
     helloVue: function () {
-      Vue.router.show('/hello/VueJS');
+      Vue.page.show('/hello/VueJS');
     },
     
     beforeEnter: function () {
