@@ -47,7 +47,7 @@
 	__webpack_require__(3)
 
 	var Vue = __webpack_require__(6)
-	var vuePage = __webpack_require__(78)
+	var vuePage = __webpack_require__(1)
 
 	window.onload = (function () {
 	  Vue.use(vuePage, {
@@ -66,30 +66,155 @@
 /* 1 */
 /***/ function(module, exports, __webpack_require__) {
 
-	module.exports = {
-	  template: __webpack_require__(9),
-	  replace: true,
-	  data: function () {
-	    return {
-	      msg: 'This is page A.',
-	      leftName: 'Bruce Lee',
-	      rightName: 'Chuck Norris'
+	var page = __webpack_require__(7);
+
+	exports.install = function (Vue, args) {
+	  var Router = Vue.extend({
+	    created: function () {
+	      if (args.default) {
+	        page('/', function () {
+	          window.location = args.default;
+	        });
+	      }
+	      
+	      for (var route in this.$options.routes) {
+	        this.parseRoute([route], this.$options.routes);
+	      }
+	    },
+	    
+	    attached: function () {
+	      page();
+	      this.$broadcast('router:start');
+	    },
+
+	    methods: {
+	      parseRoute: function (fragments, list) {
+	        var route = fragments[fragments.length-1];
+
+	        if (typeof list[route] == 'string') {
+	          var component = list[route];
+
+	          page(fragments.join(""), (function (ctx) {
+	            
+	            Vue.nextTick((function () {
+	              this.context = {
+	                path: ctx.path,
+	                canonicalPath: ctx.canonicalPath,
+	                querystring: ctx.querystring,
+	                pathname: ctx.pathname,
+	                state: ctx.state,
+	                title: ctx.title,
+	                params: {}
+	              };
+
+	              for (var obj in ctx.params) {
+	                this.context.params[obj] = ctx.params[obj];
+	              }
+
+	              if (args.viewsPath) {
+	                var path = args.viewsPath + component + '/index.js';
+	                Vue.component(component, __webpack_require__(2)(path));
+	              }
+
+	              this.currentView = component;
+	              this.$broadcast('router:update');
+	              
+	            }).bind(this));
+	            
+	          }).bind(this));
+	        }
+	        else {
+	          for (var subRoute in list[route]) {
+	            this.parseRoute(fragments.concat(subRoute), list[route]);
+	          }
+	        }
+	      },
+
+	      show: function (path) {
+	        page(path);
+	      }
 	    }
-	  },
-	  components: {
-	    'app-header': __webpack_require__(7),
-	    'app-pane': __webpack_require__(8)
+	  });
+
+	  if (args.base) {
+	    page.base(args.base);
 	  }
-	}
+	  
+	  var viewClass = (args.class) ? args.class : 'view';
+	  
+	  Vue.page = new Router({
+	    el: args.rootElement,
+	    template: '<div class="'+viewClass+'" v-component="{{currentView}}" v-with="context: context" v-transition="view"'+ ((args.keepAlive) ? ' keep-alive' : '') +'></div>',
+	    routes: args.routes,
+	    data: {
+	      currentView: null,
+	      context: null
+	    }
+	  });
+	  
+	  if (!args.cssTransitions) {
+	    Vue.transition('view', {
+	      beforeEnter: function () {
+	        if (this.beforeEnter) {
+	          this.beforeEnter();
+	        }
+	      },
+	      enter: function (el, done) {
+	        if (this.enter) {
+	          this.enter(done);
+	        }
+	        else {
+	          done();
+	        }
+	      },
+	      leave: function (el, done) {
+	        if (this.leave) {
+	          this.leave(done);
+	        }
+	        else {
+	          done();
+	        }
+	      }
+	    });
+	  }
+	};
 
 /***/ },
 /* 2 */
 /***/ function(module, exports, __webpack_require__) {
 
-	module.exports = {
-	  template: __webpack_require__(10),
-	  replace: true
-	}
+	var map = {
+		"./VuePage": 1,
+		"./VuePage.js": 1,
+		"./components/header/index": 21,
+		"./components/header/index.js": 21,
+		"./components/header/style.styl": 22,
+		"./components/header/template.html": 57,
+		"./components/pane/index": 24,
+		"./components/pane/index.js": 24,
+		"./components/pane/style.styl": 25,
+		"./components/pane/template.html": 58,
+		"./main.styl": 3,
+		"./views/a/index": 27,
+		"./views/a/index.js": 27,
+		"./views/a/template.html": 59,
+		"./views/b/index": 28,
+		"./views/b/index.js": 28,
+		"./views/b/template.html": 60
+	};
+	function webpackContext(req) {
+		return __webpack_require__(webpackContextResolve(req));
+	};
+	function webpackContextResolve(req) {
+		return map[req] || (function() { throw new Error("Cannot find module '" + req + "'.") }());
+	};
+	webpackContext.keys = function webpackContextKeys() {
+		return Object.keys(map);
+	};
+	webpackContext.resolve = webpackContextResolve;
+	module.exports = webpackContext;
+	webpackContext.id = 2;
+
 
 /***/ },
 /* 3 */
@@ -118,7 +243,7 @@
 /* 4 */
 /***/ function(module, exports, __webpack_require__) {
 
-	exports = module.exports = __webpack_require__(24)();
+	exports = module.exports = __webpack_require__(29)();
 	exports.push([module.id, "html,\nbody {\n  font-family: Helvetica, Arial, sans-serif;\n}\n.view {\n  transition: all 0.4s ease;\n  position: absolute;\n}\n.view-enter {\n  opacity: 0;\n  -webkit-transform: translate3d(100px, 0, 0);\n  transform: translate3d(100px, 0, 0);\n}\n.view-leave {\n  opacity: 0;\n  -webkit-transform: translate3d(-100px, 0, 0);\n  transform: translate3d(-100px, 0, 0);\n}\n", ""]);
 
 /***/ },
@@ -321,7 +446,7 @@
 /* 6 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var _ = __webpack_require__(11)
+	var _ = __webpack_require__(8)
 	var extend = _.extend
 
 	/**
@@ -346,7 +471,7 @@
 	 * Mixin global API
 	 */
 
-	extend(Vue, __webpack_require__(12))
+	extend(Vue, __webpack_require__(9))
 
 	/**
 	 * Vue and every constructor that extends Vue has an
@@ -358,8 +483,8 @@
 	 */
 
 	Vue.options = {
-	  directives  : __webpack_require__(18),
-	  filters     : __webpack_require__(19),
+	  directives  : __webpack_require__(15),
+	  filters     : __webpack_require__(16),
 	  partials    : {},
 	  transitions : {},
 	  components  : {}
@@ -389,20 +514,20 @@
 	 * Mixin internal instance methods
 	 */
 
+	extend(p, __webpack_require__(17))
+	extend(p, __webpack_require__(18))
+	extend(p, __webpack_require__(19))
 	extend(p, __webpack_require__(20))
-	extend(p, __webpack_require__(21))
-	extend(p, __webpack_require__(22))
-	extend(p, __webpack_require__(23))
 
 	/**
 	 * Mixin public API methods
 	 */
 
+	extend(p, __webpack_require__(10))
+	extend(p, __webpack_require__(11))
+	extend(p, __webpack_require__(12))
 	extend(p, __webpack_require__(13))
 	extend(p, __webpack_require__(14))
-	extend(p, __webpack_require__(15))
-	extend(p, __webpack_require__(16))
-	extend(p, __webpack_require__(17))
 
 	module.exports = _.Vue = Vue
 
@@ -410,56 +535,493 @@
 /* 7 */
 /***/ function(module, exports, __webpack_require__) {
 
-	__webpack_require__(25)
+	  /* globals require, module */
 
-	module.exports = {
-	  template: __webpack_require__(27),
-	  paramAttributes: ['msg']
-	}
+	/**
+	   * Module dependencies.
+	   */
+
+	  var pathtoRegexp = __webpack_require__(70);
+
+	  /**
+	   * Module exports.
+	   */
+
+	  module.exports = page;
+
+	  /**
+	   * To work properly with the URL
+	   * history.location generated polyfill in https://github.com/devote/HTML5-History-API
+	   */
+
+	  var location = window.history.location || window.location;
+
+	  /**
+	   * Perform initial dispatch.
+	   */
+
+	  var dispatch = true;
+
+	  /**
+	   * Base path.
+	   */
+
+	  var base = '';
+
+	  /**
+	   * Running flag.
+	   */
+
+	  var running;
+
+	  /**
+	  * HashBang option
+	  */
+
+	  var hashbang = false;
+
+	  /**
+	   * Register `path` with callback `fn()`,
+	   * or route `path`, or `page.start()`.
+	   *
+	   *   page(fn);
+	   *   page('*', fn);
+	   *   page('/user/:id', load, user);
+	   *   page('/user/' + user.id, { some: 'thing' });
+	   *   page('/user/' + user.id);
+	   *   page();
+	   *
+	   * @param {String|Function} path
+	   * @param {Function} fn...
+	   * @api public
+	   */
+
+	  function page(path, fn) {
+	    // <callback>
+	    if ('function' === typeof path) {
+	      return page('*', path);
+	    }
+
+	    // route <path> to <callback ...>
+	    if ('function' === typeof fn) {
+	      var route = new Route(path);
+	      for (var i = 1; i < arguments.length; ++i) {
+	        page.callbacks.push(route.middleware(arguments[i]));
+	      }
+	    // show <path> with [state]
+	    } else if ('string' == typeof path) {
+	      'string' === typeof fn
+	        ? page.redirect(path, fn)
+	        : page.show(path, fn);
+	    // start [options]
+	    } else {
+	      page.start(path);
+	    }
+	  }
+
+	  /**
+	   * Callback functions.
+	   */
+
+	  page.callbacks = [];
+
+	  /**
+	   * Get or set basepath to `path`.
+	   *
+	   * @param {String} path
+	   * @api public
+	   */
+
+	  page.base = function(path){
+	    if (0 === arguments.length) return base;
+	    base = path;
+	  };
+
+	  /**
+	   * Bind with the given `options`.
+	   *
+	   * Options:
+	   *
+	   *    - `click` bind to click events [true]
+	   *    - `popstate` bind to popstate [true]
+	   *    - `dispatch` perform initial dispatch [true]
+	   *
+	   * @param {Object} options
+	   * @api public
+	   */
+
+	  page.start = function(options){
+	    options = options || {};
+	    if (running) return;
+	    running = true;
+	    if (false === options.dispatch) dispatch = false;
+	    if (false !== options.popstate) window.addEventListener('popstate', onpopstate, false);
+	    if (false !== options.click) window.addEventListener('click', onclick, false);
+	    if (true === options.hashbang) hashbang = true;
+	    if (!dispatch) return;
+	    var url = (hashbang && ~location.hash.indexOf('#!'))
+	      ? location.hash.substr(2) + location.search
+	      : location.pathname + location.search + location.hash;
+	    page.replace(url, null, true, dispatch);
+	  };
+
+	  /**
+	   * Unbind click and popstate event handlers.
+	   *
+	   * @api public
+	   */
+
+	  page.stop = function(){
+	    if (!running) return;
+	    running = false;
+	    window.removeEventListener('click', onclick, false);
+	    window.removeEventListener('popstate', onpopstate, false);
+	  };
+
+	  /**
+	   * Show `path` with optional `state` object.
+	   *
+	   * @param {String} path
+	   * @param {Object} state
+	   * @param {Boolean} dispatch
+	   * @return {Context}
+	   * @api public
+	   */
+
+	  page.show = function(path, state, dispatch){
+	    var ctx = new Context(path, state);
+	    if (false !== dispatch) page.dispatch(ctx);
+	    if (false !== ctx.handled) ctx.pushState();
+	    return ctx;
+	  };
+
+	  /**
+	   * Show `path` with optional `state` object.
+	   *
+	   * @param {String} from
+	   * @param {String} to
+	   * @api public
+	   */
+	  page.redirect = function(from, to) {
+	    page(from, function (e) {
+	      setTimeout(function() {
+	        page.replace(to);
+	      });
+	    });
+	  };
+
+	  /**
+	   * Replace `path` with optional `state` object.
+	   *
+	   * @param {String} path
+	   * @param {Object} state
+	   * @return {Context}
+	   * @api public
+	   */
+
+	  page.replace = function(path, state, init, dispatch){
+	    var ctx = new Context(path, state);
+	    ctx.init = init;
+	    ctx.save(); // save before dispatching, which may redirect
+	    if (false !== dispatch) page.dispatch(ctx);
+	    return ctx;
+	  };
+
+	  /**
+	   * Dispatch the given `ctx`.
+	   *
+	   * @param {Object} ctx
+	   * @api private
+	   */
+
+	  page.dispatch = function(ctx){
+	    var i = 0;
+
+	    function next() {
+	      var fn = page.callbacks[i++];
+	      if (!fn) return unhandled(ctx);
+	      fn(ctx, next);
+	    }
+
+	    next();
+	  };
+
+	  /**
+	   * Unhandled `ctx`. When it's not the initial
+	   * popstate then redirect. If you wish to handle
+	   * 404s on your own use `page('*', callback)`.
+	   *
+	   * @param {Context} ctx
+	   * @api private
+	   */
+
+	  function unhandled(ctx) {
+	    if (ctx.handled) return;
+	    var current;
+
+	    if (hashbang) {
+	      current = base + location.hash.replace('#!','');
+	    } else {
+	      current = location.pathname + location.search;
+	    }
+
+	    if (current === ctx.canonicalPath) return;
+	    page.stop();
+	    ctx.handled = false;
+	    location.href = ctx.canonicalPath;
+	  }
+
+	  /**
+	   * Initialize a new "request" `Context`
+	   * with the given `path` and optional initial `state`.
+	   *
+	   * @param {String} path
+	   * @param {Object} state
+	   * @api public
+	   */
+
+	  function Context(path, state) {
+	    if ('/' === path[0] && 0 !== path.indexOf(base)) path = base + path;
+	    var i = path.indexOf('?');
+
+	    this.canonicalPath = path;
+	    this.path = path.replace(base, '') || '/';
+
+	    this.title = document.title;
+	    this.state = state || {};
+	    this.state.path = path;
+	    this.querystring = ~i
+	      ? path.slice(i + 1)
+	      : '';
+	    this.pathname = ~i
+	      ? path.slice(0, i)
+	      : path;
+	    this.params = [];
+
+	    // fragment
+	    this.hash = '';
+	    if (!~this.path.indexOf('#')) return;
+	    var parts = this.path.split('#');
+	    this.path = parts[0];
+	    this.hash = parts[1] || '';
+	    this.querystring = this.querystring.split('#')[0];
+	  }
+
+	  /**
+	   * Expose `Context`.
+	   */
+
+	  page.Context = Context;
+
+	  /**
+	   * Push state.
+	   *
+	   * @api private
+	   */
+
+	  Context.prototype.pushState = function(){
+	    history.pushState(this.state
+	      , this.title
+	      , hashbang && this.path !== '/'
+	        ? '#!' + this.path
+	        : this.canonicalPath);
+	  };
+
+	  /**
+	   * Save the context state.
+	   *
+	   * @api public
+	   */
+
+	  Context.prototype.save = function(){
+	    history.replaceState(this.state
+	      , this.title
+	      , hashbang && this.path !== '/'
+	        ? '#!' + this.path
+	        : this.canonicalPath);
+	  };
+
+	  /**
+	   * Initialize `Route` with the given HTTP `path`,
+	   * and an array of `callbacks` and `options`.
+	   *
+	   * Options:
+	   *
+	   *   - `sensitive`    enable case-sensitive routes
+	   *   - `strict`       enable strict matching for trailing slashes
+	   *
+	   * @param {String} path
+	   * @param {Object} options.
+	   * @api private
+	   */
+
+	  function Route(path, options) {
+	    options = options || {};
+	    this.path = (path === '*') ? '(.*)' : path;
+	    this.method = 'GET';
+	    this.regexp = pathtoRegexp(this.path,
+	      this.keys = [],
+	      options.sensitive,
+	      options.strict);
+	  }
+
+	  /**
+	   * Expose `Route`.
+	   */
+
+	  page.Route = Route;
+
+	  /**
+	   * Return route middleware with
+	   * the given callback `fn()`.
+	   *
+	   * @param {Function} fn
+	   * @return {Function}
+	   * @api public
+	   */
+
+	  Route.prototype.middleware = function(fn){
+	    var self = this;
+	    return function(ctx, next){
+	      if (self.match(ctx.path, ctx.params)) return fn(ctx, next);
+	      next();
+	    };
+	  };
+
+	  /**
+	   * Check if this route matches `path`, if so
+	   * populate `params`.
+	   *
+	   * @param {String} path
+	   * @param {Array} params
+	   * @return {Boolean}
+	   * @api private
+	   */
+
+	  Route.prototype.match = function(path, params){
+	    var keys = this.keys,
+	        qsIndex = path.indexOf('?'),
+	        pathname = ~qsIndex
+	          ? path.slice(0, qsIndex)
+	          : path,
+	        m = this.regexp.exec(decodeURIComponent(pathname));
+
+	    if (!m) return false;
+
+	    for (var i = 1, len = m.length; i < len; ++i) {
+	      var key = keys[i - 1];
+
+	      var val = 'string' === typeof m[i]
+	        ? decodeURIComponent(m[i])
+	        : m[i];
+
+	      if (key) {
+	        params[key.name] = undefined !== params[key.name]
+	          ? params[key.name]
+	          : val;
+	      } else {
+	        params.push(val);
+	      }
+	    }
+
+	    return true;
+	  };
+
+	  /**
+	   * Handle "populate" events.
+	   */
+
+	  function onpopstate(e) {
+	    if (e.state) {
+	      var path = e.state.path;
+	      page.replace(path, e.state);
+	    }
+	  }
+
+	  /**
+	   * Handle "click" events.
+	   */
+
+	  function onclick(e) {
+	    if (1 != which(e)) return;
+	    if (e.metaKey || e.ctrlKey || e.shiftKey) return;
+	    if (e.defaultPrevented) return;
+
+	    // ensure link
+	    var el = e.target;
+	    while (el && 'A' != el.nodeName) el = el.parentNode;
+	    if (!el || 'A' != el.nodeName) return;
+
+	    // ensure non-hash for the same path
+	    var link = el.getAttribute('href');
+	    if (el.pathname === location.pathname && (el.hash || '#' === link)) return;
+
+	    // Check for mailto: in the href
+	    if (link && link.indexOf("mailto:") > -1) return;
+
+	    // check target
+	    if (el.target) return;
+
+	    // x-origin
+	    if (!sameOrigin(el.href)) return;
+
+	    // rebuild path
+	    var path = el.pathname + el.search + (el.hash || '');
+
+	    // same page
+	    var orig = path;
+
+	    path = path.replace(base, '');
+
+	    if (base && orig === path) return;
+
+	    e.preventDefault();
+	    page.show(orig);
+	  }
+
+	  /**
+	   * Event button.
+	   */
+
+	  function which(e) {
+	    e = e || window.event;
+	    return null === e.which
+	      ? e.button
+	      : e.which;
+	  }
+
+	  /**
+	   * Check if `href` is the same origin.
+	   */
+
+	  function sameOrigin(href) {
+	    var origin = location.protocol + '//' + location.hostname;
+	    if (location.port) origin += ':' + location.port;
+	    return (href && (0 === href.indexOf(origin)));
+	  }
+
+	  page.sameOrigin = sameOrigin;
+
 
 /***/ },
 /* 8 */
 /***/ function(module, exports, __webpack_require__) {
 
-	__webpack_require__(28)
+	var lang   = __webpack_require__(30)
+	var extend = lang.extend
 
-	module.exports = {
-	  template: __webpack_require__(30),
-	  replace: true,
-	  paramAttributes: ['side', 'name']
-	}
+	extend(exports, lang)
+	extend(exports, __webpack_require__(31))
+	extend(exports, __webpack_require__(32))
+	extend(exports, __webpack_require__(33))
+	extend(exports, __webpack_require__(34))
 
 /***/ },
 /* 9 */
 /***/ function(module, exports, __webpack_require__) {
 
-	module.exports = "<div>\n  <app-header msg=\"{{msg}}\"></app-header>\n  <app-pane side=\"left\" name=\"{{leftName}}\"></app-pane>\n  <app-pane side=\"right\" name=\"{{rightName}}\"></app-pane>\n</div>";
-
-/***/ },
-/* 10 */
-/***/ function(module, exports, __webpack_require__) {
-
-	module.exports = "<div>\n  <h1>This is page B.</h1>\n  <p>Hello {{context.params.name}}!</p>\n</div>";
-
-/***/ },
-/* 11 */
-/***/ function(module, exports, __webpack_require__) {
-
-	var lang   = __webpack_require__(31)
-	var extend = lang.extend
-
-	extend(exports, lang)
-	extend(exports, __webpack_require__(32))
-	extend(exports, __webpack_require__(33))
-	extend(exports, __webpack_require__(34))
-	extend(exports, __webpack_require__(35))
-
-/***/ },
-/* 12 */
-/***/ function(module, exports, __webpack_require__) {
-
-	var _ = __webpack_require__(11)
-	var mergeOptions = __webpack_require__(36)
+	var _ = __webpack_require__(8)
+	var mergeOptions = __webpack_require__(35)
 
 	/**
 	 * Expose useful internals
@@ -467,7 +1029,7 @@
 
 	exports.util       = _
 	exports.nextTick   = _.nextTick
-	exports.config     = __webpack_require__(37)
+	exports.config     = __webpack_require__(36)
 
 	/**
 	 * Each instance constructor, including Vue, has a unique
@@ -593,15 +1155,15 @@
 	createAssetRegisters(exports)
 
 /***/ },
-/* 13 */
+/* 10 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var _ = __webpack_require__(11)
-	var Watcher = __webpack_require__(38)
-	var Path = __webpack_require__(58)
-	var textParser = __webpack_require__(59)
-	var dirParser = __webpack_require__(60)
-	var expParser = __webpack_require__(61)
+	var _ = __webpack_require__(8)
+	var Watcher = __webpack_require__(37)
+	var Path = __webpack_require__(61)
+	var textParser = __webpack_require__(62)
+	var dirParser = __webpack_require__(63)
+	var expParser = __webpack_require__(64)
 	var filterRE = /[^|]\|[^|]/
 
 	/**
@@ -756,11 +1318,11 @@
 	}
 
 /***/ },
-/* 14 */
+/* 11 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var _ = __webpack_require__(11)
-	var transition = __webpack_require__(62)
+	var _ = __webpack_require__(8)
+	var transition = __webpack_require__(65)
 
 	/**
 	 * Append instance to target
@@ -970,10 +1532,10 @@
 	}
 
 /***/ },
-/* 15 */
+/* 12 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var _ = __webpack_require__(11)
+	var _ = __webpack_require__(8)
 
 	/**
 	 * Listen on the given `event` with `fn`.
@@ -1151,10 +1713,10 @@
 	}
 
 /***/ },
-/* 16 */
+/* 13 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var _ = __webpack_require__(11)
+	var _ = __webpack_require__(8)
 
 	/**
 	 * Create a child instance that prototypally inehrits
@@ -1209,11 +1771,11 @@
 	}
 
 /***/ },
-/* 17 */
+/* 14 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var _ = __webpack_require__(11)
-	var compile = __webpack_require__(64)
+	var _ = __webpack_require__(8)
+	var compile = __webpack_require__(66)
 
 	/**
 	 * Set instance target element and kick off the compilation
@@ -1359,7 +1921,7 @@
 	}
 
 /***/ },
-/* 18 */
+/* 15 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// manipulation directives
@@ -1377,7 +1939,7 @@
 
 	// event listener directives
 	exports.on         = __webpack_require__(50)
-	exports.model      = __webpack_require__(63)
+	exports.model      = __webpack_require__(68)
 
 	// child vm directives
 	exports.component  = __webpack_require__(51)
@@ -1386,10 +1948,10 @@
 	exports['with']    = __webpack_require__(54)
 
 /***/ },
-/* 19 */
+/* 16 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var _ = __webpack_require__(11)
+	var _ = __webpack_require__(8)
 
 	/**
 	 * Stringify value.
@@ -1509,13 +2071,13 @@
 	 * Install special array filters
 	 */
 
-	_.extend(exports, __webpack_require__(55))
+	_.extend(exports, __webpack_require__(38))
 
 /***/ },
-/* 20 */
+/* 17 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var mergeOptions = __webpack_require__(36)
+	var mergeOptions = __webpack_require__(35)
 
 	/**
 	 * The main init sequence. This is called for every
@@ -1593,10 +2155,10 @@
 	}
 
 /***/ },
-/* 21 */
+/* 18 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var _ = __webpack_require__(11)
+	var _ = __webpack_require__(8)
 	var inDoc = _.inDoc
 
 	/**
@@ -1720,12 +2282,12 @@
 	}
 
 /***/ },
-/* 22 */
+/* 19 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var _ = __webpack_require__(11)
-	var Observer = __webpack_require__(66)
-	var Binding = __webpack_require__(56)
+	var _ = __webpack_require__(8)
+	var Observer = __webpack_require__(69)
+	var Binding = __webpack_require__(55)
 
 	/**
 	 * Setup the scope of an instance, which contains:
@@ -1942,13 +2504,13 @@
 	}
 
 /***/ },
-/* 23 */
+/* 20 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var _ = __webpack_require__(11)
-	var Directive = __webpack_require__(57)
-	var compile = __webpack_require__(64)
-	var transclude = __webpack_require__(65)
+	var _ = __webpack_require__(8)
+	var Directive = __webpack_require__(56)
+	var compile = __webpack_require__(66)
+	var transclude = __webpack_require__(67)
 
 	/**
 	 * Transclude, compile and link element.
@@ -2018,7 +2580,119 @@
 	}
 
 /***/ },
+/* 21 */
+/***/ function(module, exports, __webpack_require__) {
+
+	__webpack_require__(22)
+
+	module.exports = {
+	  template: __webpack_require__(57),
+	  paramAttributes: ['msg']
+	}
+
+/***/ },
+/* 22 */
+/***/ function(module, exports, __webpack_require__) {
+
+	// style-loader: Adds some css to the DOM by adding a <style> tag
+
+	// load the styles
+	var content = __webpack_require__(23);
+	if(typeof content === 'string') content = [[module.id, content, '']];
+	// add the styles to the DOM
+	var update = __webpack_require__(5)(content, {});
+	// Hot Module Replacement
+	if(false) {
+		// When the styles change, update the <style> tags
+		module.hot.accept("!!/Users/alex/Work/Vue/vue-page/dev/examples/webpack/node_modules/css-loader/index.js!/Users/alex/Work/Vue/vue-page/dev/examples/webpack/node_modules/stylus-loader/index.js!/Users/alex/Work/Vue/vue-page/dev/examples/webpack/src/components/header/style.styl", function() {
+			var newContent = require("!!/Users/alex/Work/Vue/vue-page/dev/examples/webpack/node_modules/css-loader/index.js!/Users/alex/Work/Vue/vue-page/dev/examples/webpack/node_modules/stylus-loader/index.js!/Users/alex/Work/Vue/vue-page/dev/examples/webpack/src/components/header/style.styl");
+			if(typeof newContent === 'string') newContent = [module.id, newContent, ''];
+			update(newContent);
+		});
+		// When the module is disposed, remove the <style> tags
+		module.hot.dispose(function() { update(); });
+	}
+
+/***/ },
+/* 23 */
+/***/ function(module, exports, __webpack_require__) {
+
+	exports = module.exports = __webpack_require__(29)();
+	exports.push([module.id, "app-header {\n  color: #bada55;\n}\n", ""]);
+
+/***/ },
 /* 24 */
+/***/ function(module, exports, __webpack_require__) {
+
+	__webpack_require__(25)
+
+	module.exports = {
+	  template: __webpack_require__(58),
+	  replace: true,
+	  paramAttributes: ['side', 'name']
+	}
+
+/***/ },
+/* 25 */
+/***/ function(module, exports, __webpack_require__) {
+
+	// style-loader: Adds some css to the DOM by adding a <style> tag
+
+	// load the styles
+	var content = __webpack_require__(26);
+	if(typeof content === 'string') content = [[module.id, content, '']];
+	// add the styles to the DOM
+	var update = __webpack_require__(5)(content, {});
+	// Hot Module Replacement
+	if(false) {
+		// When the styles change, update the <style> tags
+		module.hot.accept("!!/Users/alex/Work/Vue/vue-page/dev/examples/webpack/node_modules/css-loader/index.js!/Users/alex/Work/Vue/vue-page/dev/examples/webpack/node_modules/stylus-loader/index.js!/Users/alex/Work/Vue/vue-page/dev/examples/webpack/src/components/pane/style.styl", function() {
+			var newContent = require("!!/Users/alex/Work/Vue/vue-page/dev/examples/webpack/node_modules/css-loader/index.js!/Users/alex/Work/Vue/vue-page/dev/examples/webpack/node_modules/stylus-loader/index.js!/Users/alex/Work/Vue/vue-page/dev/examples/webpack/src/components/pane/style.styl");
+			if(typeof newContent === 'string') newContent = [module.id, newContent, ''];
+			update(newContent);
+		});
+		// When the module is disposed, remove the <style> tags
+		module.hot.dispose(function() { update(); });
+	}
+
+/***/ },
+/* 26 */
+/***/ function(module, exports, __webpack_require__) {
+
+	exports = module.exports = __webpack_require__(29)();
+	exports.push([module.id, ".pane {\n  display: inline-block;\n  width: 300px;\n  height: 300px;\n  box-sizing: border-box;\n  padding: 15px 30px;\n  border: 2px solid #f3f3f3;\n  margin: 10px;\n}\n", ""]);
+
+/***/ },
+/* 27 */
+/***/ function(module, exports, __webpack_require__) {
+
+	module.exports = {
+	  template: __webpack_require__(59),
+	  replace: true,
+	  data: function () {
+	    return {
+	      msg: 'This is page A.',
+	      leftName: 'Bruce Lee',
+	      rightName: 'Chuck Norris'
+	    }
+	  },
+	  components: {
+	    'app-header': __webpack_require__(21),
+	    'app-pane': __webpack_require__(24)
+	  }
+	}
+
+/***/ },
+/* 28 */
+/***/ function(module, exports, __webpack_require__) {
+
+	module.exports = {
+	  template: __webpack_require__(60),
+	  replace: true
+	}
+
+/***/ },
+/* 29 */
 /***/ function(module, exports, __webpack_require__) {
 
 	module.exports = function() {
@@ -2039,79 +2713,7 @@
 	}
 
 /***/ },
-/* 25 */
-/***/ function(module, exports, __webpack_require__) {
-
-	// style-loader: Adds some css to the DOM by adding a <style> tag
-
-	// load the styles
-	var content = __webpack_require__(26);
-	if(typeof content === 'string') content = [[module.id, content, '']];
-	// add the styles to the DOM
-	var update = __webpack_require__(5)(content, {});
-	// Hot Module Replacement
-	if(false) {
-		// When the styles change, update the <style> tags
-		module.hot.accept("!!/Users/alex/Work/Vue/vue-page/dev/examples/webpack/node_modules/css-loader/index.js!/Users/alex/Work/Vue/vue-page/dev/examples/webpack/node_modules/stylus-loader/index.js!/Users/alex/Work/Vue/vue-page/dev/examples/webpack/src/components/header/style.styl", function() {
-			var newContent = require("!!/Users/alex/Work/Vue/vue-page/dev/examples/webpack/node_modules/css-loader/index.js!/Users/alex/Work/Vue/vue-page/dev/examples/webpack/node_modules/stylus-loader/index.js!/Users/alex/Work/Vue/vue-page/dev/examples/webpack/src/components/header/style.styl");
-			if(typeof newContent === 'string') newContent = [module.id, newContent, ''];
-			update(newContent);
-		});
-		// When the module is disposed, remove the <style> tags
-		module.hot.dispose(function() { update(); });
-	}
-
-/***/ },
-/* 26 */
-/***/ function(module, exports, __webpack_require__) {
-
-	exports = module.exports = __webpack_require__(24)();
-	exports.push([module.id, "app-header {\n  color: #bada55;\n}\n", ""]);
-
-/***/ },
-/* 27 */
-/***/ function(module, exports, __webpack_require__) {
-
-	module.exports = "<h1>{{msg}}</h1>";
-
-/***/ },
-/* 28 */
-/***/ function(module, exports, __webpack_require__) {
-
-	// style-loader: Adds some css to the DOM by adding a <style> tag
-
-	// load the styles
-	var content = __webpack_require__(29);
-	if(typeof content === 'string') content = [[module.id, content, '']];
-	// add the styles to the DOM
-	var update = __webpack_require__(5)(content, {});
-	// Hot Module Replacement
-	if(false) {
-		// When the styles change, update the <style> tags
-		module.hot.accept("!!/Users/alex/Work/Vue/vue-page/dev/examples/webpack/node_modules/css-loader/index.js!/Users/alex/Work/Vue/vue-page/dev/examples/webpack/node_modules/stylus-loader/index.js!/Users/alex/Work/Vue/vue-page/dev/examples/webpack/src/components/pane/style.styl", function() {
-			var newContent = require("!!/Users/alex/Work/Vue/vue-page/dev/examples/webpack/node_modules/css-loader/index.js!/Users/alex/Work/Vue/vue-page/dev/examples/webpack/node_modules/stylus-loader/index.js!/Users/alex/Work/Vue/vue-page/dev/examples/webpack/src/components/pane/style.styl");
-			if(typeof newContent === 'string') newContent = [module.id, newContent, ''];
-			update(newContent);
-		});
-		// When the module is disposed, remove the <style> tags
-		module.hot.dispose(function() { update(); });
-	}
-
-/***/ },
-/* 29 */
-/***/ function(module, exports, __webpack_require__) {
-
-	exports = module.exports = __webpack_require__(24)();
-	exports.push([module.id, ".pane {\n  display: inline-block;\n  width: 300px;\n  height: 300px;\n  box-sizing: border-box;\n  padding: 15px 30px;\n  border: 2px solid #f3f3f3;\n  margin: 10px;\n}\n", ""]);
-
-/***/ },
 /* 30 */
-/***/ function(module, exports, __webpack_require__) {
-
-	module.exports = "<div class=\"pane\">\n  <p>This is the {{side}} pane!</p>\n  <p>{{name}}</p>\n</div>";
-
-/***/ },
-/* 31 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/**
@@ -2290,7 +2892,7 @@
 	}
 
 /***/ },
-/* 32 */
+/* 31 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/**
@@ -2369,10 +2971,10 @@
 	}
 
 /***/ },
-/* 33 */
+/* 32 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var config = __webpack_require__(37)
+	var config = __webpack_require__(36)
 
 	/**
 	 * Check if a node is in the document.
@@ -2550,10 +3152,10 @@
 	}
 
 /***/ },
-/* 34 */
+/* 33 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var _ = __webpack_require__(35)
+	var _ = __webpack_require__(34)
 
 	/**
 	 * Resolve read & write filters for a vm instance. The
@@ -2627,10 +3229,10 @@
 	}
 
 /***/ },
-/* 35 */
+/* 34 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var config = __webpack_require__(37)
+	var config = __webpack_require__(36)
 
 	/**
 	 * Enable debug utilities. The enableDebug() function and
@@ -2682,10 +3284,10 @@
 	}
 
 /***/ },
-/* 36 */
+/* 35 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var _ = __webpack_require__(11)
+	var _ = __webpack_require__(8)
 	var extend = _.extend
 
 	/**
@@ -2916,7 +3518,7 @@
 	}
 
 /***/ },
-/* 37 */
+/* 36 */
 /***/ function(module, exports, __webpack_require__) {
 
 	module.exports = {
@@ -3000,14 +3602,14 @@
 	})
 
 /***/ },
-/* 38 */
+/* 37 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var _ = __webpack_require__(11)
-	var config = __webpack_require__(37)
-	var Observer = __webpack_require__(66)
-	var expParser = __webpack_require__(61)
-	var Batcher = __webpack_require__(67)
+	var _ = __webpack_require__(8)
+	var config = __webpack_require__(36)
+	var Observer = __webpack_require__(69)
+	var expParser = __webpack_require__(64)
+	var Batcher = __webpack_require__(71)
 
 	var batcher = new Batcher()
 	var uid = 0
@@ -3220,10 +3822,102 @@
 	module.exports = Watcher
 
 /***/ },
+/* 38 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var _ = __webpack_require__(8)
+	var Path = __webpack_require__(61)
+
+	/**
+	 * Filter filter for v-repeat
+	 *
+	 * @param {String} searchKey
+	 * @param {String} [delimiter]
+	 * @param {String} dataKey
+	 */
+
+	exports.filterBy = function (arr, searchKey, delimiter, dataKey) {
+	  // allow optional `in` delimiter
+	  // because why not
+	  if (delimiter && delimiter !== 'in') {
+	    dataKey = delimiter
+	  }
+	  // get the search string
+	  var search =
+	    _.stripQuotes(searchKey) ||
+	    this.$get(searchKey)
+	  if (!search) {
+	    return arr
+	  }
+	  search = search.toLowerCase()
+	  // get the optional dataKey
+	  dataKey =
+	    dataKey &&
+	    (_.stripQuotes(dataKey) || this.$get(dataKey))
+	  return arr.filter(function (item) {
+	    return dataKey
+	      ? contains(Path.get(item, dataKey), search)
+	      : contains(item, search)
+	  })
+	}
+
+	/**
+	 * Filter filter for v-repeat
+	 *
+	 * @param {String} sortKey
+	 * @param {String} reverseKey
+	 */
+
+	exports.orderBy = function (arr, sortKey, reverseKey) {
+	  var key =
+	    _.stripQuotes(sortKey) ||
+	    this.$get(sortKey)
+	  if (!key) {
+	    return arr
+	  }
+	  var order = 1
+	  if (reverseKey) {
+	    if (reverseKey === '-1') {
+	      order = -1
+	    } else if (reverseKey.charCodeAt(0) === 0x21) { // !
+	      reverseKey = reverseKey.slice(1)
+	      order = this.$get(reverseKey) ? 1 : -1
+	    } else {
+	      order = this.$get(reverseKey) ? -1 : 1
+	    }
+	  }
+	  // sort on a copy to avoid mutating original array
+	  return arr.slice().sort(function (a, b) {
+	    a = Path.get(a, key)
+	    b = Path.get(b, key)
+	    return a === b ? 0 : a > b ? order : -order
+	  })
+	}
+
+	/**
+	 * String contain helper
+	 *
+	 * @param {*} val
+	 * @param {String} search
+	 */
+
+	function contains (val, search) {
+	  if (_.isObject(val)) {
+	    for (var key in val) {
+	      if (contains(val[key], search)) {
+	        return true
+	      }
+	    }
+	  } else if (val != null) {
+	    return val.toString().toLowerCase().indexOf(search) > -1
+	  }
+	}
+
+/***/ },
 /* 39 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var _ = __webpack_require__(11)
+	var _ = __webpack_require__(8)
 
 	module.exports = {
 
@@ -3243,8 +3937,8 @@
 /* 40 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var _ = __webpack_require__(11)
-	var templateParser = __webpack_require__(68)
+	var _ = __webpack_require__(8)
+	var templateParser = __webpack_require__(72)
 
 	module.exports = {
 
@@ -3322,7 +4016,7 @@
 /* 42 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var transition = __webpack_require__(62)
+	var transition = __webpack_require__(65)
 
 	module.exports = function (value) {
 	  var el = this.el
@@ -3335,7 +4029,7 @@
 /* 43 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var _ = __webpack_require__(11)
+	var _ = __webpack_require__(8)
 	var addClass = _.addClass
 	var removeClass = _.removeClass
 
@@ -3376,7 +4070,7 @@
 /* 45 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var _ = __webpack_require__(11)
+	var _ = __webpack_require__(8)
 
 	module.exports = {
 
@@ -3405,7 +4099,7 @@
 /* 46 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var config = __webpack_require__(37)
+	var config = __webpack_require__(36)
 
 	module.exports = {
 
@@ -3473,9 +4167,9 @@
 /* 48 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var _ = __webpack_require__(11)
-	var templateParser = __webpack_require__(68)
-	var transition = __webpack_require__(62)
+	var _ = __webpack_require__(8)
+	var templateParser = __webpack_require__(72)
+	var transition = __webpack_require__(65)
 
 	module.exports = {
 
@@ -3550,7 +4244,7 @@
 /* 50 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var _ = __webpack_require__(11)
+	var _ = __webpack_require__(8)
 
 	module.exports = {
 
@@ -3614,8 +4308,8 @@
 /* 51 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var _ = __webpack_require__(11)
-	var templateParser = __webpack_require__(68)
+	var _ = __webpack_require__(8)
+	var templateParser = __webpack_require__(72)
 
 	module.exports = {
 
@@ -3775,14 +4469,14 @@
 /* 52 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var _ = __webpack_require__(11)
+	var _ = __webpack_require__(8)
 	var isObject = _.isObject
-	var textParser = __webpack_require__(59)
-	var expParser = __webpack_require__(61)
-	var templateParser = __webpack_require__(68)
-	var compile = __webpack_require__(64)
-	var transclude = __webpack_require__(65)
-	var mergeOptions = __webpack_require__(36)
+	var textParser = __webpack_require__(62)
+	var expParser = __webpack_require__(64)
+	var templateParser = __webpack_require__(72)
+	var compile = __webpack_require__(66)
+	var transclude = __webpack_require__(67)
+	var mergeOptions = __webpack_require__(35)
 	var uid = 0
 
 	module.exports = {
@@ -4287,10 +4981,10 @@
 /* 53 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var _ = __webpack_require__(11)
-	var compile = __webpack_require__(64)
-	var templateParser = __webpack_require__(68)
-	var transition = __webpack_require__(62)
+	var _ = __webpack_require__(8)
+	var compile = __webpack_require__(66)
+	var templateParser = __webpack_require__(72)
+	var transition = __webpack_require__(65)
 
 	module.exports = {
 
@@ -4360,8 +5054,8 @@
 /* 54 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var _ = __webpack_require__(11)
-	var Watcher = __webpack_require__(38)
+	var _ = __webpack_require__(8)
+	var Watcher = __webpack_require__(37)
 
 	module.exports = {
 
@@ -4410,98 +5104,6 @@
 
 /***/ },
 /* 55 */
-/***/ function(module, exports, __webpack_require__) {
-
-	var _ = __webpack_require__(11)
-	var Path = __webpack_require__(58)
-
-	/**
-	 * Filter filter for v-repeat
-	 *
-	 * @param {String} searchKey
-	 * @param {String} [delimiter]
-	 * @param {String} dataKey
-	 */
-
-	exports.filterBy = function (arr, searchKey, delimiter, dataKey) {
-	  // allow optional `in` delimiter
-	  // because why not
-	  if (delimiter && delimiter !== 'in') {
-	    dataKey = delimiter
-	  }
-	  // get the search string
-	  var search =
-	    _.stripQuotes(searchKey) ||
-	    this.$get(searchKey)
-	  if (!search) {
-	    return arr
-	  }
-	  search = search.toLowerCase()
-	  // get the optional dataKey
-	  dataKey =
-	    dataKey &&
-	    (_.stripQuotes(dataKey) || this.$get(dataKey))
-	  return arr.filter(function (item) {
-	    return dataKey
-	      ? contains(Path.get(item, dataKey), search)
-	      : contains(item, search)
-	  })
-	}
-
-	/**
-	 * Filter filter for v-repeat
-	 *
-	 * @param {String} sortKey
-	 * @param {String} reverseKey
-	 */
-
-	exports.orderBy = function (arr, sortKey, reverseKey) {
-	  var key =
-	    _.stripQuotes(sortKey) ||
-	    this.$get(sortKey)
-	  if (!key) {
-	    return arr
-	  }
-	  var order = 1
-	  if (reverseKey) {
-	    if (reverseKey === '-1') {
-	      order = -1
-	    } else if (reverseKey.charCodeAt(0) === 0x21) { // !
-	      reverseKey = reverseKey.slice(1)
-	      order = this.$get(reverseKey) ? 1 : -1
-	    } else {
-	      order = this.$get(reverseKey) ? -1 : 1
-	    }
-	  }
-	  // sort on a copy to avoid mutating original array
-	  return arr.slice().sort(function (a, b) {
-	    a = Path.get(a, key)
-	    b = Path.get(b, key)
-	    return a === b ? 0 : a > b ? order : -order
-	  })
-	}
-
-	/**
-	 * String contain helper
-	 *
-	 * @param {*} val
-	 * @param {String} search
-	 */
-
-	function contains (val, search) {
-	  if (_.isObject(val)) {
-	    for (var key in val) {
-	      if (contains(val[key], search)) {
-	        return true
-	      }
-	    }
-	  } else if (val != null) {
-	    return val.toString().toLowerCase().indexOf(search) > -1
-	  }
-	}
-
-/***/ },
-/* 56 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var uid = 0
@@ -4556,14 +5158,14 @@
 	module.exports = Binding
 
 /***/ },
-/* 57 */
+/* 56 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var _ = __webpack_require__(11)
-	var config = __webpack_require__(37)
-	var Watcher = __webpack_require__(38)
-	var textParser = __webpack_require__(59)
-	var expParser = __webpack_require__(61)
+	var _ = __webpack_require__(8)
+	var config = __webpack_require__(36)
+	var Watcher = __webpack_require__(37)
+	var textParser = __webpack_require__(62)
+	var expParser = __webpack_require__(64)
 
 	/**
 	 * A directive links a DOM element with a piece of data,
@@ -4763,11 +5365,35 @@
 	module.exports = Directive
 
 /***/ },
+/* 57 */
+/***/ function(module, exports, __webpack_require__) {
+
+	module.exports = "<h1>{{msg}}</h1>";
+
+/***/ },
 /* 58 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var _ = __webpack_require__(11)
-	var Cache = __webpack_require__(69)
+	module.exports = "<div class=\"pane\">\n  <p>This is the {{side}} pane!</p>\n  <p>{{name}}</p>\n</div>";
+
+/***/ },
+/* 59 */
+/***/ function(module, exports, __webpack_require__) {
+
+	module.exports = "<div>\n  <app-header msg=\"{{msg}}\"></app-header>\n  <app-pane side=\"left\" name=\"{{leftName}}\"></app-pane>\n  <app-pane side=\"right\" name=\"{{rightName}}\"></app-pane>\n</div>";
+
+/***/ },
+/* 60 */
+/***/ function(module, exports, __webpack_require__) {
+
+	module.exports = "<div>\n  <h1>This is page B.</h1>\n  <p>Hello {{context.params.name}}!</p>\n</div>";
+
+/***/ },
+/* 61 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var _ = __webpack_require__(8)
+	var Cache = __webpack_require__(73)
 	var pathCache = new Cache(1000)
 	var identRE = /^[$_a-zA-Z]+[\w$]*$/
 
@@ -5068,12 +5694,12 @@
 	}
 
 /***/ },
-/* 59 */
+/* 62 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var Cache = __webpack_require__(69)
-	var config = __webpack_require__(37)
-	var dirParser = __webpack_require__(60)
+	var Cache = __webpack_require__(73)
+	var config = __webpack_require__(36)
+	var dirParser = __webpack_require__(63)
 	var regexEscapeRE = /[-.*+?^${}()|[\]\/\\]/g
 	var cache, tagRE, htmlRE, firstChar, lastChar
 
@@ -5251,11 +5877,11 @@
 	}
 
 /***/ },
-/* 60 */
+/* 63 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var _ = __webpack_require__(11)
-	var Cache = __webpack_require__(69)
+	var _ = __webpack_require__(8)
+	var Cache = __webpack_require__(73)
 	var cache = new Cache(1000)
 	var argRE = /^[^\{\?]+$|^'[^']*'$|^"[^"]*"$/
 	var filterTokenRE = /[^\s'"]+|'[^']+'|"[^"]+"/g
@@ -5415,12 +6041,12 @@
 	}
 
 /***/ },
-/* 61 */
+/* 64 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var _ = __webpack_require__(11)
-	var Path = __webpack_require__(58)
-	var Cache = __webpack_require__(69)
+	var _ = __webpack_require__(8)
+	var Path = __webpack_require__(61)
+	var Cache = __webpack_require__(73)
 	var expressionCache = new Cache(1000)
 
 	var keywords =
@@ -5646,12 +6272,12 @@
 	exports.pathTestRE = pathTestRE
 
 /***/ },
-/* 62 */
+/* 65 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var _ = __webpack_require__(11)
-	var applyCSSTransition = __webpack_require__(70)
-	var applyJSTransition = __webpack_require__(71)
+	var _ = __webpack_require__(8)
+	var applyCSSTransition = __webpack_require__(74)
+	var applyJSTransition = __webpack_require__(75)
 
 	/**
 	 * Append with transition.
@@ -5802,75 +6428,14 @@
 	}
 
 /***/ },
-/* 63 */
+/* 66 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var _ = __webpack_require__(11)
-
-	var handlers = {
-	  _default: __webpack_require__(72),
-	  radio: __webpack_require__(73),
-	  select: __webpack_require__(74),
-	  checkbox: __webpack_require__(75)
-	}
-
-	module.exports = {
-
-	  priority: 800,
-	  twoWay: true,
-	  handlers: handlers,
-
-	  /**
-	   * Possible elements:
-	   *   <select>
-	   *   <textarea>
-	   *   <input type="*">
-	   *     - text
-	   *     - checkbox
-	   *     - radio
-	   *     - number
-	   *     - TODO: more types may be supplied as a plugin
-	   */
-
-	  bind: function () {
-	    // friendly warning...
-	    var filters = this.filters
-	    if (filters && filters.read && !filters.write) {
-	      _.warn(
-	        'It seems you are using a read-only filter with ' +
-	        'v-model. You might want to use a two-way filter ' +
-	        'to ensure correct behavior.'
-	      )
-	    }
-	    var el = this.el
-	    var tag = el.tagName
-	    var handler
-	    if (tag === 'INPUT') {
-	      handler = handlers[el.type] || handlers._default
-	    } else if (tag === 'SELECT') {
-	      handler = handlers.select
-	    } else if (tag === 'TEXTAREA') {
-	      handler = handlers._default
-	    } else {
-	      _.warn("v-model doesn't support element type: " + tag)
-	      return
-	    }
-	    handler.bind.call(this)
-	    this.update = handler.update
-	    this.unbind = handler.unbind
-	  }
-
-	}
-
-/***/ },
-/* 64 */
-/***/ function(module, exports, __webpack_require__) {
-
-	var _ = __webpack_require__(11)
-	var config = __webpack_require__(37)
-	var textParser = __webpack_require__(59)
-	var dirParser = __webpack_require__(60)
-	var templateParser = __webpack_require__(68)
+	var _ = __webpack_require__(8)
+	var config = __webpack_require__(36)
+	var textParser = __webpack_require__(62)
+	var dirParser = __webpack_require__(63)
+	var templateParser = __webpack_require__(72)
 
 	/**
 	 * Compile a template and return a reusable composite link
@@ -6405,11 +6970,11 @@
 	}
 
 /***/ },
-/* 65 */
+/* 67 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var _ = __webpack_require__(11)
-	var templateParser = __webpack_require__(68)
+	var _ = __webpack_require__(8)
+	var templateParser = __webpack_require__(72)
 
 	/**
 	 * Process an element or a DocumentFragment based on a
@@ -6573,15 +7138,76 @@
 	}
 
 /***/ },
-/* 66 */
+/* 68 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var _ = __webpack_require__(11)
-	var config = __webpack_require__(37)
-	var Binding = __webpack_require__(56)
-	var arrayMethods = __webpack_require__(76)
+	var _ = __webpack_require__(8)
+
+	var handlers = {
+	  _default: __webpack_require__(76),
+	  radio: __webpack_require__(77),
+	  select: __webpack_require__(78),
+	  checkbox: __webpack_require__(79)
+	}
+
+	module.exports = {
+
+	  priority: 800,
+	  twoWay: true,
+	  handlers: handlers,
+
+	  /**
+	   * Possible elements:
+	   *   <select>
+	   *   <textarea>
+	   *   <input type="*">
+	   *     - text
+	   *     - checkbox
+	   *     - radio
+	   *     - number
+	   *     - TODO: more types may be supplied as a plugin
+	   */
+
+	  bind: function () {
+	    // friendly warning...
+	    var filters = this.filters
+	    if (filters && filters.read && !filters.write) {
+	      _.warn(
+	        'It seems you are using a read-only filter with ' +
+	        'v-model. You might want to use a two-way filter ' +
+	        'to ensure correct behavior.'
+	      )
+	    }
+	    var el = this.el
+	    var tag = el.tagName
+	    var handler
+	    if (tag === 'INPUT') {
+	      handler = handlers[el.type] || handlers._default
+	    } else if (tag === 'SELECT') {
+	      handler = handlers.select
+	    } else if (tag === 'TEXTAREA') {
+	      handler = handlers._default
+	    } else {
+	      _.warn("v-model doesn't support element type: " + tag)
+	      return
+	    }
+	    handler.bind.call(this)
+	    this.update = handler.update
+	    this.unbind = handler.unbind
+	  }
+
+	}
+
+/***/ },
+/* 69 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var _ = __webpack_require__(8)
+	var config = __webpack_require__(36)
+	var Binding = __webpack_require__(55)
+	var arrayMethods = __webpack_require__(80)
 	var arrayKeys = Object.getOwnPropertyNames(arrayMethods)
-	__webpack_require__(77)
+	__webpack_require__(81)
 
 	var uid = 0
 
@@ -6814,10 +7440,183 @@
 
 
 /***/ },
-/* 67 */
+/* 70 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var _ = __webpack_require__(11)
+	/**
+	 * Expose `pathtoRegexp`.
+	 */
+	module.exports = pathtoRegexp;
+
+	/**
+	 * The main path matching regexp utility.
+	 *
+	 * @type {RegExp}
+	 */
+	var PATH_REGEXP = new RegExp([
+	  // Match already escaped characters that would otherwise incorrectly appear
+	  // in future matches. This allows the user to escape special characters that
+	  // shouldn't be transformed.
+	  '(\\\\.)',
+	  // Match Express-style parameters and un-named parameters with a prefix
+	  // and optional suffixes. Matches appear as:
+	  //
+	  // "/:test(\\d+)?" => ["/", "test", "\d+", undefined, "?"]
+	  // "/route(\\d+)" => [undefined, undefined, undefined, "\d+", undefined]
+	  '([\\/.])?(?:\\:(\\w+)(?:\\(((?:\\\\.|[^)])*)\\))?|\\(((?:\\\\.|[^)])*)\\))([+*?])?',
+	  // Match regexp special characters that should always be escaped.
+	  '([.+*?=^!:${}()[\\]|\\/])'
+	].join('|'), 'g');
+
+	/**
+	 * Escape the capturing group by escaping special characters and meaning.
+	 *
+	 * @param  {String} group
+	 * @return {String}
+	 */
+	function escapeGroup (group) {
+	  return group.replace(/([=!:$\/()])/g, '\\$1');
+	}
+
+	/**
+	 * Attach the keys as a property of the regexp.
+	 *
+	 * @param  {RegExp} re
+	 * @param  {Array}  keys
+	 * @return {RegExp}
+	 */
+	var attachKeys = function (re, keys) {
+	  re.keys = keys;
+
+	  return re;
+	};
+
+	/**
+	 * Normalize the given path string, returning a regular expression.
+	 *
+	 * An empty array should be passed in, which will contain the placeholder key
+	 * names. For example `/user/:id` will then contain `["id"]`.
+	 *
+	 * @param  {(String|RegExp|Array)} path
+	 * @param  {Array}                 keys
+	 * @param  {Object}                options
+	 * @return {RegExp}
+	 */
+	function pathtoRegexp (path, keys, options) {
+	  if (keys && !Array.isArray(keys)) {
+	    options = keys;
+	    keys = null;
+	  }
+
+	  keys = keys || [];
+	  options = options || {};
+
+	  var strict = options.strict;
+	  var end = options.end !== false;
+	  var flags = options.sensitive ? '' : 'i';
+	  var index = 0;
+
+	  if (path instanceof RegExp) {
+	    // Match all capturing groups of a regexp.
+	    var groups = path.source.match(/\((?!\?)/g) || [];
+
+	    // Map all the matches to their numeric keys and push into the keys.
+	    keys.push.apply(keys, groups.map(function (match, index) {
+	      return {
+	        name:      index,
+	        delimiter: null,
+	        optional:  false,
+	        repeat:    false
+	      };
+	    }));
+
+	    // Return the source back to the user.
+	    return attachKeys(path, keys);
+	  }
+
+	  if (Array.isArray(path)) {
+	    // Map array parts into regexps and return their source. We also pass
+	    // the same keys and options instance into every generation to get
+	    // consistent matching groups before we join the sources together.
+	    path = path.map(function (value) {
+	      return pathtoRegexp(value, keys, options).source;
+	    });
+
+	    // Generate a new regexp instance by joining all the parts together.
+	    return attachKeys(new RegExp('(?:' + path.join('|') + ')', flags), keys);
+	  }
+
+	  // Alter the path string into a usable regexp.
+	  path = path.replace(PATH_REGEXP, function (match, escaped, prefix, key, capture, group, suffix, escape) {
+	    // Avoiding re-escaping escaped characters.
+	    if (escaped) {
+	      return escaped;
+	    }
+
+	    // Escape regexp special characters.
+	    if (escape) {
+	      return '\\' + escape;
+	    }
+
+	    var repeat   = suffix === '+' || suffix === '*';
+	    var optional = suffix === '?' || suffix === '*';
+
+	    keys.push({
+	      name:      key || index++,
+	      delimiter: prefix || '/',
+	      optional:  optional,
+	      repeat:    repeat
+	    });
+
+	    // Escape the prefix character.
+	    prefix = prefix ? '\\' + prefix : '';
+
+	    // Match using the custom capturing group, or fallback to capturing
+	    // everything up to the next slash (or next period if the param was
+	    // prefixed with a period).
+	    capture = escapeGroup(capture || group || '[^' + (prefix || '\\/') + ']+?');
+
+	    // Allow parameters to be repeated more than once.
+	    if (repeat) {
+	      capture = capture + '(?:' + prefix + capture + ')*';
+	    }
+
+	    // Allow a parameter to be optional.
+	    if (optional) {
+	      return '(?:' + prefix + '(' + capture + '))?';
+	    }
+
+	    // Basic parameter support.
+	    return prefix + '(' + capture + ')';
+	  });
+
+	  // Check whether the path ends in a slash as it alters some match behaviour.
+	  var endsWithSlash = path[path.length - 1] === '/';
+
+	  // In non-strict mode we allow an optional trailing slash in the match. If
+	  // the path to match already ended with a slash, we need to remove it for
+	  // consistency. The slash is only valid at the very end of a path match, not
+	  // anywhere in the middle. This is important for non-ending mode, otherwise
+	  // "/test/" will match "/test//route".
+	  if (!strict) {
+	    path = (endsWithSlash ? path.slice(0, -2) : path) + '(?:\\/(?=$))?';
+	  }
+
+	  // In non-ending mode, we need prompt the capturing groups to match as much
+	  // as possible by using a positive lookahead for the end or next path segment.
+	  if (!end) {
+	    path += strict && endsWithSlash ? '' : '(?=\\/|$)';
+	  }
+
+	  return attachKeys(new RegExp('^' + path + (end ? '$' : ''), flags), keys);
+	};
+
+
+/***/ },
+/* 71 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var _ = __webpack_require__(8)
 
 	/**
 	 * The Batcher maintains a job queue to be run
@@ -6884,11 +7683,11 @@
 	module.exports = Batcher
 
 /***/ },
-/* 68 */
+/* 72 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var _ = __webpack_require__(11)
-	var Cache = __webpack_require__(69)
+	var _ = __webpack_require__(8)
+	var Cache = __webpack_require__(73)
 	var templateCache = new Cache(100)
 
 	/**
@@ -7111,7 +7910,7 @@
 	}
 
 /***/ },
-/* 69 */
+/* 73 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/**
@@ -7228,10 +8027,10 @@
 	module.exports = Cache
 
 /***/ },
-/* 70 */
+/* 74 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var _ = __webpack_require__(11)
+	var _ = __webpack_require__(8)
 	var addClass = _.addClass
 	var removeClass = _.removeClass
 	var transDurationProp = _.transitionProp + 'Duration'
@@ -7422,7 +8221,7 @@
 	}
 
 /***/ },
-/* 71 */
+/* 75 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/**
@@ -7470,10 +8269,10 @@
 	}
 
 /***/ },
-/* 72 */
+/* 76 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var _ = __webpack_require__(11)
+	var _ = __webpack_require__(8)
 
 	module.exports = {
 
@@ -7592,10 +8391,10 @@
 	}
 
 /***/ },
-/* 73 */
+/* 77 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var _ = __webpack_require__(11)
+	var _ = __webpack_require__(8)
 
 	module.exports = {
 
@@ -7623,11 +8422,11 @@
 	}
 
 /***/ },
-/* 74 */
+/* 78 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var _ = __webpack_require__(11)
-	var Watcher = __webpack_require__(38)
+	var _ = __webpack_require__(8)
+	var Watcher = __webpack_require__(37)
 
 	module.exports = {
 
@@ -7795,10 +8594,10 @@
 	}
 
 /***/ },
-/* 75 */
+/* 79 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var _ = __webpack_require__(11)
+	var _ = __webpack_require__(8)
 
 	module.exports = {
 
@@ -7825,10 +8624,10 @@
 	}
 
 /***/ },
-/* 76 */
+/* 80 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var _ = __webpack_require__(11)
+	var _ = __webpack_require__(8)
 	var arrayProto = Array.prototype
 	var arrayMethods = Object.create(arrayProto)
 
@@ -7920,10 +8719,10 @@
 	module.exports = arrayMethods
 
 /***/ },
-/* 77 */
+/* 81 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var _ = __webpack_require__(11)
+	var _ = __webpack_require__(8)
 	var objProto = Object.prototype
 
 	/**
@@ -7998,805 +8797,6 @@
 	    }
 	  }
 	)
-
-/***/ },
-/* 78 */
-/***/ function(module, exports, __webpack_require__) {
-
-	var page = __webpack_require__(79);
-
-	exports.install = function (Vue, args) {
-	  var Router = Vue.extend({
-	    created: function () {
-	      if (args.default) {
-	        page('/', function () {
-	          window.location = args.default;
-	        });
-	      }
-	      
-	      for (var route in this.$options.routes) {
-	        this.parseRoute([route], this.$options.routes);
-	      }
-	    },
-	    
-	    attached: function () {
-	      page();
-	      this.$broadcast('router:start');
-	    },
-
-	    methods: {
-	      parseRoute: function (fragments, list) {
-	        var route = fragments[fragments.length-1];
-
-	        if (typeof list[route] == 'string') {
-	          var component = list[route];
-
-	          page(fragments.join(""), (function (ctx) {
-	            
-	            Vue.nextTick((function () {
-	              this.context = {
-	                path: ctx.path,
-	                canonicalPath: ctx.canonicalPath,
-	                querystring: ctx.querystring,
-	                pathname: ctx.pathname,
-	                state: ctx.state,
-	                title: ctx.title,
-	                params: {}
-	              };
-
-	              for (var obj in ctx.params) {
-	                this.context.params[obj] = ctx.params[obj];
-	              }
-
-	              if (args.viewsPath) {
-	                var path = args.viewsPath + component + '/index.js'
-	                Vue.component(component, __webpack_require__(81)(path))
-	              }
-
-	              this.currentView = component;
-	              this.$broadcast('router:update')
-	              
-	            }).bind(this));
-	            
-	          }).bind(this));
-	        }
-	        else {
-	          for (var subRoute in list[route]) {
-	            this.parseRoute(fragments.concat(subRoute), list[route]);
-	          }
-	        }
-	      },
-
-	      show: function (path) {
-	        page(path);
-	      }
-	    }
-	  });
-
-	  if (args.base) {
-	    page.base(args.base);
-	  }
-	  
-	  var viewClass = (args.class) ? args.class : 'view';
-	  
-	  Vue.page = new Router({
-	    el: args.rootElement,
-	    template: '<div class="'+viewClass+'" v-component="{{currentView}}" v-with="context: context" v-transition="view"'+ ((args.keepAlive) ? ' keep-alive' : '') +'></div>',
-	    routes: args.routes,
-	    data: {
-	      currentView: null,
-	      context: null
-	    }
-	  });
-	  
-	  if (!args.cssTransitions) {
-	    Vue.transition('view', {
-	      beforeEnter: function () {
-	        if (this.beforeEnter) {
-	          this.beforeEnter();
-	        }
-	      },
-	      enter: function (el, done) {
-	        if (this.enter) {
-	          this.enter(done);
-	        }
-	        else {
-	          done();
-	        }
-	      },
-	      leave: function (el, done) {
-	        if (this.leave) {
-	          this.leave(done);
-	        }
-	        else {
-	          done();
-	        }
-	      }
-	    });
-	  }
-	};
-
-/***/ },
-/* 79 */
-/***/ function(module, exports, __webpack_require__) {
-
-	  /* globals require, module */
-
-	/**
-	   * Module dependencies.
-	   */
-
-	  var pathtoRegexp = __webpack_require__(80);
-
-	  /**
-	   * Module exports.
-	   */
-
-	  module.exports = page;
-
-	  /**
-	   * To work properly with the URL
-	   * history.location generated polyfill in https://github.com/devote/HTML5-History-API
-	   */
-
-	  var location = window.history.location || window.location;
-
-	  /**
-	   * Perform initial dispatch.
-	   */
-
-	  var dispatch = true;
-
-	  /**
-	   * Base path.
-	   */
-
-	  var base = '';
-
-	  /**
-	   * Running flag.
-	   */
-
-	  var running;
-
-	  /**
-	  * HashBang option
-	  */
-
-	  var hashbang = false;
-
-	  /**
-	   * Register `path` with callback `fn()`,
-	   * or route `path`, or `page.start()`.
-	   *
-	   *   page(fn);
-	   *   page('*', fn);
-	   *   page('/user/:id', load, user);
-	   *   page('/user/' + user.id, { some: 'thing' });
-	   *   page('/user/' + user.id);
-	   *   page();
-	   *
-	   * @param {String|Function} path
-	   * @param {Function} fn...
-	   * @api public
-	   */
-
-	  function page(path, fn) {
-	    // <callback>
-	    if ('function' === typeof path) {
-	      return page('*', path);
-	    }
-
-	    // route <path> to <callback ...>
-	    if ('function' === typeof fn) {
-	      var route = new Route(path);
-	      for (var i = 1; i < arguments.length; ++i) {
-	        page.callbacks.push(route.middleware(arguments[i]));
-	      }
-	    // show <path> with [state]
-	    } else if ('string' == typeof path) {
-	      'string' === typeof fn
-	        ? page.redirect(path, fn)
-	        : page.show(path, fn);
-	    // start [options]
-	    } else {
-	      page.start(path);
-	    }
-	  }
-
-	  /**
-	   * Callback functions.
-	   */
-
-	  page.callbacks = [];
-
-	  /**
-	   * Get or set basepath to `path`.
-	   *
-	   * @param {String} path
-	   * @api public
-	   */
-
-	  page.base = function(path){
-	    if (0 === arguments.length) return base;
-	    base = path;
-	  };
-
-	  /**
-	   * Bind with the given `options`.
-	   *
-	   * Options:
-	   *
-	   *    - `click` bind to click events [true]
-	   *    - `popstate` bind to popstate [true]
-	   *    - `dispatch` perform initial dispatch [true]
-	   *
-	   * @param {Object} options
-	   * @api public
-	   */
-
-	  page.start = function(options){
-	    options = options || {};
-	    if (running) return;
-	    running = true;
-	    if (false === options.dispatch) dispatch = false;
-	    if (false !== options.popstate) window.addEventListener('popstate', onpopstate, false);
-	    if (false !== options.click) window.addEventListener('click', onclick, false);
-	    if (true === options.hashbang) hashbang = true;
-	    if (!dispatch) return;
-	    var url = (hashbang && ~location.hash.indexOf('#!'))
-	      ? location.hash.substr(2) + location.search
-	      : location.pathname + location.search + location.hash;
-	    page.replace(url, null, true, dispatch);
-	  };
-
-	  /**
-	   * Unbind click and popstate event handlers.
-	   *
-	   * @api public
-	   */
-
-	  page.stop = function(){
-	    if (!running) return;
-	    running = false;
-	    window.removeEventListener('click', onclick, false);
-	    window.removeEventListener('popstate', onpopstate, false);
-	  };
-
-	  /**
-	   * Show `path` with optional `state` object.
-	   *
-	   * @param {String} path
-	   * @param {Object} state
-	   * @param {Boolean} dispatch
-	   * @return {Context}
-	   * @api public
-	   */
-
-	  page.show = function(path, state, dispatch){
-	    var ctx = new Context(path, state);
-	    if (false !== dispatch) page.dispatch(ctx);
-	    if (false !== ctx.handled) ctx.pushState();
-	    return ctx;
-	  };
-
-	  /**
-	   * Show `path` with optional `state` object.
-	   *
-	   * @param {String} from
-	   * @param {String} to
-	   * @api public
-	   */
-	  page.redirect = function(from, to) {
-	    page(from, function (e) {
-	      setTimeout(function() {
-	        page.replace(to);
-	      });
-	    });
-	  };
-
-	  /**
-	   * Replace `path` with optional `state` object.
-	   *
-	   * @param {String} path
-	   * @param {Object} state
-	   * @return {Context}
-	   * @api public
-	   */
-
-	  page.replace = function(path, state, init, dispatch){
-	    var ctx = new Context(path, state);
-	    ctx.init = init;
-	    ctx.save(); // save before dispatching, which may redirect
-	    if (false !== dispatch) page.dispatch(ctx);
-	    return ctx;
-	  };
-
-	  /**
-	   * Dispatch the given `ctx`.
-	   *
-	   * @param {Object} ctx
-	   * @api private
-	   */
-
-	  page.dispatch = function(ctx){
-	    var i = 0;
-
-	    function next() {
-	      var fn = page.callbacks[i++];
-	      if (!fn) return unhandled(ctx);
-	      fn(ctx, next);
-	    }
-
-	    next();
-	  };
-
-	  /**
-	   * Unhandled `ctx`. When it's not the initial
-	   * popstate then redirect. If you wish to handle
-	   * 404s on your own use `page('*', callback)`.
-	   *
-	   * @param {Context} ctx
-	   * @api private
-	   */
-
-	  function unhandled(ctx) {
-	    if (ctx.handled) return;
-	    var current;
-
-	    if (hashbang) {
-	      current = base + location.hash.replace('#!','');
-	    } else {
-	      current = location.pathname + location.search;
-	    }
-
-	    if (current === ctx.canonicalPath) return;
-	    page.stop();
-	    ctx.handled = false;
-	    location.href = ctx.canonicalPath;
-	  }
-
-	  /**
-	   * Initialize a new "request" `Context`
-	   * with the given `path` and optional initial `state`.
-	   *
-	   * @param {String} path
-	   * @param {Object} state
-	   * @api public
-	   */
-
-	  function Context(path, state) {
-	    if ('/' === path[0] && 0 !== path.indexOf(base)) path = base + path;
-	    var i = path.indexOf('?');
-
-	    this.canonicalPath = path;
-	    this.path = path.replace(base, '') || '/';
-
-	    this.title = document.title;
-	    this.state = state || {};
-	    this.state.path = path;
-	    this.querystring = ~i
-	      ? path.slice(i + 1)
-	      : '';
-	    this.pathname = ~i
-	      ? path.slice(0, i)
-	      : path;
-	    this.params = [];
-
-	    // fragment
-	    this.hash = '';
-	    if (!~this.path.indexOf('#')) return;
-	    var parts = this.path.split('#');
-	    this.path = parts[0];
-	    this.hash = parts[1] || '';
-	    this.querystring = this.querystring.split('#')[0];
-	  }
-
-	  /**
-	   * Expose `Context`.
-	   */
-
-	  page.Context = Context;
-
-	  /**
-	   * Push state.
-	   *
-	   * @api private
-	   */
-
-	  Context.prototype.pushState = function(){
-	    history.pushState(this.state
-	      , this.title
-	      , hashbang && this.path !== '/'
-	        ? '#!' + this.path
-	        : this.canonicalPath);
-	  };
-
-	  /**
-	   * Save the context state.
-	   *
-	   * @api public
-	   */
-
-	  Context.prototype.save = function(){
-	    history.replaceState(this.state
-	      , this.title
-	      , hashbang && this.path !== '/'
-	        ? '#!' + this.path
-	        : this.canonicalPath);
-	  };
-
-	  /**
-	   * Initialize `Route` with the given HTTP `path`,
-	   * and an array of `callbacks` and `options`.
-	   *
-	   * Options:
-	   *
-	   *   - `sensitive`    enable case-sensitive routes
-	   *   - `strict`       enable strict matching for trailing slashes
-	   *
-	   * @param {String} path
-	   * @param {Object} options.
-	   * @api private
-	   */
-
-	  function Route(path, options) {
-	    options = options || {};
-	    this.path = (path === '*') ? '(.*)' : path;
-	    this.method = 'GET';
-	    this.regexp = pathtoRegexp(this.path,
-	      this.keys = [],
-	      options.sensitive,
-	      options.strict);
-	  }
-
-	  /**
-	   * Expose `Route`.
-	   */
-
-	  page.Route = Route;
-
-	  /**
-	   * Return route middleware with
-	   * the given callback `fn()`.
-	   *
-	   * @param {Function} fn
-	   * @return {Function}
-	   * @api public
-	   */
-
-	  Route.prototype.middleware = function(fn){
-	    var self = this;
-	    return function(ctx, next){
-	      if (self.match(ctx.path, ctx.params)) return fn(ctx, next);
-	      next();
-	    };
-	  };
-
-	  /**
-	   * Check if this route matches `path`, if so
-	   * populate `params`.
-	   *
-	   * @param {String} path
-	   * @param {Array} params
-	   * @return {Boolean}
-	   * @api private
-	   */
-
-	  Route.prototype.match = function(path, params){
-	    var keys = this.keys,
-	        qsIndex = path.indexOf('?'),
-	        pathname = ~qsIndex
-	          ? path.slice(0, qsIndex)
-	          : path,
-	        m = this.regexp.exec(decodeURIComponent(pathname));
-
-	    if (!m) return false;
-
-	    for (var i = 1, len = m.length; i < len; ++i) {
-	      var key = keys[i - 1];
-
-	      var val = 'string' === typeof m[i]
-	        ? decodeURIComponent(m[i])
-	        : m[i];
-
-	      if (key) {
-	        params[key.name] = undefined !== params[key.name]
-	          ? params[key.name]
-	          : val;
-	      } else {
-	        params.push(val);
-	      }
-	    }
-
-	    return true;
-	  };
-
-	  /**
-	   * Handle "populate" events.
-	   */
-
-	  function onpopstate(e) {
-	    if (e.state) {
-	      var path = e.state.path;
-	      page.replace(path, e.state);
-	    }
-	  }
-
-	  /**
-	   * Handle "click" events.
-	   */
-
-	  function onclick(e) {
-	    if (1 != which(e)) return;
-	    if (e.metaKey || e.ctrlKey || e.shiftKey) return;
-	    if (e.defaultPrevented) return;
-
-	    // ensure link
-	    var el = e.target;
-	    while (el && 'A' != el.nodeName) el = el.parentNode;
-	    if (!el || 'A' != el.nodeName) return;
-
-	    // ensure non-hash for the same path
-	    var link = el.getAttribute('href');
-	    if (el.pathname === location.pathname && (el.hash || '#' === link)) return;
-
-	    // Check for mailto: in the href
-	    if (link && link.indexOf("mailto:") > -1) return;
-
-	    // check target
-	    if (el.target) return;
-
-	    // x-origin
-	    if (!sameOrigin(el.href)) return;
-
-	    // rebuild path
-	    var path = el.pathname + el.search + (el.hash || '');
-
-	    // same page
-	    var orig = path;
-
-	    path = path.replace(base, '');
-
-	    if (base && orig === path) return;
-
-	    e.preventDefault();
-	    page.show(orig);
-	  }
-
-	  /**
-	   * Event button.
-	   */
-
-	  function which(e) {
-	    e = e || window.event;
-	    return null === e.which
-	      ? e.button
-	      : e.which;
-	  }
-
-	  /**
-	   * Check if `href` is the same origin.
-	   */
-
-	  function sameOrigin(href) {
-	    var origin = location.protocol + '//' + location.hostname;
-	    if (location.port) origin += ':' + location.port;
-	    return (href && (0 === href.indexOf(origin)));
-	  }
-
-	  page.sameOrigin = sameOrigin;
-
-
-/***/ },
-/* 80 */
-/***/ function(module, exports, __webpack_require__) {
-
-	/**
-	 * Expose `pathtoRegexp`.
-	 */
-	module.exports = pathtoRegexp;
-
-	/**
-	 * The main path matching regexp utility.
-	 *
-	 * @type {RegExp}
-	 */
-	var PATH_REGEXP = new RegExp([
-	  // Match already escaped characters that would otherwise incorrectly appear
-	  // in future matches. This allows the user to escape special characters that
-	  // shouldn't be transformed.
-	  '(\\\\.)',
-	  // Match Express-style parameters and un-named parameters with a prefix
-	  // and optional suffixes. Matches appear as:
-	  //
-	  // "/:test(\\d+)?" => ["/", "test", "\d+", undefined, "?"]
-	  // "/route(\\d+)" => [undefined, undefined, undefined, "\d+", undefined]
-	  '([\\/.])?(?:\\:(\\w+)(?:\\(((?:\\\\.|[^)])*)\\))?|\\(((?:\\\\.|[^)])*)\\))([+*?])?',
-	  // Match regexp special characters that should always be escaped.
-	  '([.+*?=^!:${}()[\\]|\\/])'
-	].join('|'), 'g');
-
-	/**
-	 * Escape the capturing group by escaping special characters and meaning.
-	 *
-	 * @param  {String} group
-	 * @return {String}
-	 */
-	function escapeGroup (group) {
-	  return group.replace(/([=!:$\/()])/g, '\\$1');
-	}
-
-	/**
-	 * Attach the keys as a property of the regexp.
-	 *
-	 * @param  {RegExp} re
-	 * @param  {Array}  keys
-	 * @return {RegExp}
-	 */
-	var attachKeys = function (re, keys) {
-	  re.keys = keys;
-
-	  return re;
-	};
-
-	/**
-	 * Normalize the given path string, returning a regular expression.
-	 *
-	 * An empty array should be passed in, which will contain the placeholder key
-	 * names. For example `/user/:id` will then contain `["id"]`.
-	 *
-	 * @param  {(String|RegExp|Array)} path
-	 * @param  {Array}                 keys
-	 * @param  {Object}                options
-	 * @return {RegExp}
-	 */
-	function pathtoRegexp (path, keys, options) {
-	  if (keys && !Array.isArray(keys)) {
-	    options = keys;
-	    keys = null;
-	  }
-
-	  keys = keys || [];
-	  options = options || {};
-
-	  var strict = options.strict;
-	  var end = options.end !== false;
-	  var flags = options.sensitive ? '' : 'i';
-	  var index = 0;
-
-	  if (path instanceof RegExp) {
-	    // Match all capturing groups of a regexp.
-	    var groups = path.source.match(/\((?!\?)/g) || [];
-
-	    // Map all the matches to their numeric keys and push into the keys.
-	    keys.push.apply(keys, groups.map(function (match, index) {
-	      return {
-	        name:      index,
-	        delimiter: null,
-	        optional:  false,
-	        repeat:    false
-	      };
-	    }));
-
-	    // Return the source back to the user.
-	    return attachKeys(path, keys);
-	  }
-
-	  if (Array.isArray(path)) {
-	    // Map array parts into regexps and return their source. We also pass
-	    // the same keys and options instance into every generation to get
-	    // consistent matching groups before we join the sources together.
-	    path = path.map(function (value) {
-	      return pathtoRegexp(value, keys, options).source;
-	    });
-
-	    // Generate a new regexp instance by joining all the parts together.
-	    return attachKeys(new RegExp('(?:' + path.join('|') + ')', flags), keys);
-	  }
-
-	  // Alter the path string into a usable regexp.
-	  path = path.replace(PATH_REGEXP, function (match, escaped, prefix, key, capture, group, suffix, escape) {
-	    // Avoiding re-escaping escaped characters.
-	    if (escaped) {
-	      return escaped;
-	    }
-
-	    // Escape regexp special characters.
-	    if (escape) {
-	      return '\\' + escape;
-	    }
-
-	    var repeat   = suffix === '+' || suffix === '*';
-	    var optional = suffix === '?' || suffix === '*';
-
-	    keys.push({
-	      name:      key || index++,
-	      delimiter: prefix || '/',
-	      optional:  optional,
-	      repeat:    repeat
-	    });
-
-	    // Escape the prefix character.
-	    prefix = prefix ? '\\' + prefix : '';
-
-	    // Match using the custom capturing group, or fallback to capturing
-	    // everything up to the next slash (or next period if the param was
-	    // prefixed with a period).
-	    capture = escapeGroup(capture || group || '[^' + (prefix || '\\/') + ']+?');
-
-	    // Allow parameters to be repeated more than once.
-	    if (repeat) {
-	      capture = capture + '(?:' + prefix + capture + ')*';
-	    }
-
-	    // Allow a parameter to be optional.
-	    if (optional) {
-	      return '(?:' + prefix + '(' + capture + '))?';
-	    }
-
-	    // Basic parameter support.
-	    return prefix + '(' + capture + ')';
-	  });
-
-	  // Check whether the path ends in a slash as it alters some match behaviour.
-	  var endsWithSlash = path[path.length - 1] === '/';
-
-	  // In non-strict mode we allow an optional trailing slash in the match. If
-	  // the path to match already ended with a slash, we need to remove it for
-	  // consistency. The slash is only valid at the very end of a path match, not
-	  // anywhere in the middle. This is important for non-ending mode, otherwise
-	  // "/test/" will match "/test//route".
-	  if (!strict) {
-	    path = (endsWithSlash ? path.slice(0, -2) : path) + '(?:\\/(?=$))?';
-	  }
-
-	  // In non-ending mode, we need prompt the capturing groups to match as much
-	  // as possible by using a positive lookahead for the end or next path segment.
-	  if (!end) {
-	    path += strict && endsWithSlash ? '' : '(?=\\/|$)';
-	  }
-
-	  return attachKeys(new RegExp('^' + path + (end ? '$' : ''), flags), keys);
-	};
-
-
-/***/ },
-/* 81 */
-/***/ function(module, exports, __webpack_require__) {
-
-	var map = {
-		"./VuePage": 78,
-		"./VuePage.js": 78,
-		"./components/header/index": 7,
-		"./components/header/index.js": 7,
-		"./components/header/style.styl": 25,
-		"./components/header/template.html": 27,
-		"./components/pane/index": 8,
-		"./components/pane/index.js": 8,
-		"./components/pane/style.styl": 28,
-		"./components/pane/template.html": 30,
-		"./main.styl": 3,
-		"./views/a/index": 1,
-		"./views/a/index.js": 1,
-		"./views/a/template.html": 9,
-		"./views/b/index": 2,
-		"./views/b/index.js": 2,
-		"./views/b/template.html": 10
-	};
-	function webpackContext(req) {
-		return __webpack_require__(webpackContextResolve(req));
-	};
-	function webpackContextResolve(req) {
-		return map[req] || (function() { throw new Error("Cannot find module '" + req + "'.") }());
-	};
-	webpackContext.keys = function webpackContextKeys() {
-		return Object.keys(map);
-	};
-	webpackContext.resolve = webpackContextResolve;
-	module.exports = webpackContext;
-	webpackContext.id = 81;
-
 
 /***/ }
 /******/ ])

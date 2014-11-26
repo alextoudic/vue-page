@@ -44,12 +44,12 @@ exports.install = function (Vue, args) {
               }
 
               if (args.viewsPath) {
-                var path = args.viewsPath + component + '/index.js'
-                Vue.component(component, require(path))
+                var path = args.viewsPath + component + '/index.js';
+                Vue.component(component, require(path));
               }
 
               this.currentView = component;
-              this.$broadcast('router:update')
+              this.$broadcast('router:update');
               
             }).bind(this));
             
