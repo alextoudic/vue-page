@@ -15,7 +15,7 @@ npm install vue-page --save
 ### Initialize
 
 Then initialize the plugin with your routes (see [pagejs](http://visionmedia.github.io/page.js) for more infos on routes). Note that the routes initialization is a little bit different from the pagejs one because I wanted to allow url "nesting".
-Each string value which are affected to properties are names of v-component instances.
+Each string value which is affected to a property is the of a v-component instance.
 
 ```javascript
 var Vue     = require('Vue'),
@@ -25,6 +25,8 @@ Vue.use(vuePage, {
   rootElement: '#app', //element in which the components will injected
   class: 'page', //class of the components' wrappers (default is view)
   base: '/base', //optionnal
+  cssTransitions: false, //optionnal default is false
+  keepAlive: true, //optionnal default is false
   routes: {
     '/fr': {
       '/accueil': 'home',
@@ -32,9 +34,8 @@ Vue.use(vuePage, {
     },
     '/en': {
       '/home': 'home',
-      '/about': 'about',
+      '/about': 'about'
     },
-    '/page/:id': 'pageId',
     '/hello/:name': 'greetings',
     '*': 'lost' //not found
   },
@@ -51,8 +52,6 @@ This configuration will create the following routes (on right are the components
 '/base/en/home' -> 'home'
 
 '/base/en/about' -> 'about'
-
-'/page/:id' -> 'pageId'
 
 '/hello/:name' -> 'greetings'
 
@@ -84,17 +83,23 @@ module.exports = Vue.component('home', {
     },
 
     beforeEnter: function () {
+      //set style before anim
+
       TweenMax.set(this.$el, {
         x: -window.innerWidth/2
       });
     },
     enter: function (cb) {
+      //animate enter
+
       TweenMax.to(this.$el, 0.8, {
         x: 0,
         onComplete: cb
       });
     },
     leave: function (cb) {
+      //animate leave
+
       TweenMax.to(this.$el, 0.8, {
         x: -window.innerWidth/2,
         onComplete: cb
@@ -107,6 +112,8 @@ module.exports = Vue.component('home', {
 As you can see in this component example, the plugin fires events. On startup, it fires 'router:start' and on each url change 'router:update'. So you can listen those events to do whatever you want.
 
 You can also define beforeEnter, enter and leave as methods but they're all optionnal. It becomes pretty handy if you want fancy transitions between your pages. For enter and leave don't forget to call the callbacks, the world won't collapse if you don't but your DOM will be dirty as v-transition uses it to clean up.
+
+You can also set cssTransitions to true and define the animations in your CSS file using .view-enter and .view-leave classes. But note that if you use css transitions, your beforeEnter, enter and leave methods won't be called and you'll have to listen update events if you want to execute a method on update.
 
 You also have a Vue.page.show method which call the pagejs show method so you can redirect your user on an other url.
 
@@ -128,12 +135,16 @@ module.exports = Vue.component('greetings', {
   template: template,
   methods: {
     beforeEnter: function () {
+      //set style before anim
+
       TweenMax.set(this.$el, {
         y: -20,
         opacity: 0
       });
     },
     enter: function (cb) {
+      //animate enter
+
       TweenMax.to(this.$el, 0.4, {
         y: 0,
         opacity: 1,
@@ -141,6 +152,8 @@ module.exports = Vue.component('greetings', {
       });
     },
     leave: function (cb) {
+      //animate leave
+
       TweenMax.to(this.$el, 0.4, {
         y: 20,
         opacity: 0,
@@ -156,3 +169,42 @@ See, nothing but animations.
 This context object also contains infos about the url so if you two urls which call the same component, you can easily know the url used to open it.
 
 You should look at the [pagejs documentation](http://visionmedia.github.io/page.js/) to know what other properties you can get from context.
+
+### Working with Webpack
+
+Vue-page is now working with Webpack. My example is based on [vue-webpack-example](https://github.com/vuejs/vue-webpack-example).
+
+Here is the main.js I used as entry.
+
+```javascript
+require('./main.styl')
+
+var Vue = require('vue')
+var vuePage = require('./VuePage')
+
+window.onload = (function () {
+  Vue.use(vuePage, {
+    rootElement: '#app',
+    keepAlive: true,
+    cssTransitions: true,
+    viewsPath: './views/',
+    routes: {
+      '/a': 'a',
+      '/b/:name': 'b'
+    }
+  })
+})
+```
+
+The important part is the viewsPath property. You have to define it so the plugin will know where to find the components your referencing. All components have to be defined in an index.js at ./views/[component-name].
+
+For example the b component is defined in ./views/b/index.js as following
+
+```javascript
+module.exports = {
+  template: require('./template.html'),
+  replace: true
+}
+```
+
+This component declaration is comming directly from vue-webpack-example.

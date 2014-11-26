@@ -10,6 +10,7 @@ Vue.use(vuePage, {
   rootElement: '#app',
   class: 'page',
   base: '/base',
+  keepAlive: true,
   routes: {
     '/fr': {
       '/accueil': 'home',

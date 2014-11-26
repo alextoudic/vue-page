@@ -1,6 +1,6 @@
 {
   "name": "vue-page",
-  "version": "0.1.2",
+  "version": "1.0.0",
   "description": "A Vue.js plugin wrapping pagejs.",
   "keywords": [
     "vue",

@@ -1,7 +1,7 @@
-.DS_Store
-node_modules
-example/bundle.js
-example/node_modules
-example/bower_components
-example/.server
-example/public
+**/.DS_Store
+**/node_modules
+example/browserify/bundle.js
+example/browserify/bower_components
+example/browserify/.server
+example/browserify/public
+example/webpack/build

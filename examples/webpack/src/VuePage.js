@@ -24,10 +24,11 @@ exports.install = function (Vue, args) {
         var route = fragments[fragments.length-1];
 
         if (typeof list[route] == 'string') {
+          var component = list[route];
+
           page(fragments.join(""), (function (ctx) {
             
             Vue.nextTick((function () {
-              
               this.context = {
                 path: ctx.path,
                 canonicalPath: ctx.canonicalPath,
@@ -41,9 +42,14 @@ exports.install = function (Vue, args) {
               for (var obj in ctx.params) {
                 this.context.params[obj] = ctx.params[obj];
               }
-              
-              this.currentView = list[route];
-              this.$broadcast('router:update');
+
+              if (args.viewsPath) {
+                var path = args.viewsPath + component + '/index.js'
+                Vue.component(component, require(path))
+              }
+
+              this.currentView = component;
+              this.$broadcast('router:update')
               
             }).bind(this));
             
@@ -70,7 +76,7 @@ exports.install = function (Vue, args) {
   
   Vue.page = new Router({
     el: args.rootElement,
-    template: '<div class="'+viewClass+'" v-component="{{currentView}}" v-with="context: context" v-transition="view"></div>',
+    template: '<div class="'+viewClass+'" v-component="{{currentView}}" v-with="context: context" v-transition="view"'+ ((args.keepAlive) ? ' keep-alive' : '') +'></div>',
     routes: args.routes,
     data: {
       currentView: null,
@@ -78,27 +84,29 @@ exports.install = function (Vue, args) {
     }
   });
   
-  Vue.transition('view', {
-    beforeEnter: function () {
-      if (this.beforeEnter) {
-        this.beforeEnter();
+  if (!args.cssTransitions) {
+    Vue.transition('view', {
+      beforeEnter: function () {
+        if (this.beforeEnter) {
+          this.beforeEnter();
+        }
+      },
+      enter: function (el, done) {
+        if (this.enter) {
+          this.enter(done);
+        }
+        else {
+          done();
+        }
+      },
+      leave: function (el, done) {
+        if (this.leave) {
+          this.leave(done);
+        }
+        else {
+          done();
+        }
       }
-    },
-    enter: function (el, done) {
-      if (this.enter) {
-        this.enter(done);
-      }
-      else {
-        done();
-      }
-    },
-    leave: function (el, done) {
-      if (this.leave) {
-        this.leave(done);
-      }
-      else {
-        done();
-      }
-    }
-  });
+    });
+  }
 };

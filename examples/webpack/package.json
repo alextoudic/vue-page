@@ -1,0 +1,35 @@
+{
+  "name": "vue-webpack-example",
+  "version": "1.0.0",
+  "description": "Vue project example using Webpack as the bundler.",
+  "main": "src/main.js",
+  "dependencies": {
+    "vue": "yyx990803/vue#next",
+    "vue-page": "^0.1.2"
+  },
+  "devDependencies": {
+    "css-loader": "^0.9.0",
+    "html-loader": "^0.2.2",
+    "style-loader": "^0.8.1",
+    "stylus-loader": "^0.4.0",
+    "webpack": "^1.4.4"
+  },
+  "scripts": {
+    "dev": "webpack --watch",
+    "build": "webpack -p"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/vuejs/vue-webpack-example"
+  },
+  "keywords": [
+    "vue",
+    "webpack"
+  ],
+  "author": "Evan You",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/vuejs/vue-webpack-example/issues"
+  },
+  "homepage": "https://github.com/vuejs/vue-webpack-example"
+}
