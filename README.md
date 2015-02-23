@@ -188,7 +188,6 @@ window.onload = (function () {
     keepAlive: true,
     cssTransitions: true,
     viewsPath: './views/',
-    require: require,
     routes: {
       '/a': 'a',
       '/b/:name': 'b'
