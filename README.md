@@ -188,6 +188,7 @@ window.onload = (function () {
     keepAlive: true,
     cssTransitions: true,
     viewsPath: './views/',
+    require: require,
     routes: {
       '/a': 'a',
       '/b/:name': 'b'
@@ -208,3 +209,9 @@ module.exports = {
 ```
 
 This component declaration is comming directly from vue-webpack-example.
+
+If vue-page is used as a npm module the viewsPath will be relative to the vue-page module location. If you want viewsPath to be relative to the current file you can add the following attribute
+
+```javascript
+require: require 
+```
