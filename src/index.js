@@ -82,7 +82,9 @@ exports.install = function (Vue, args) {
     data: {
       currentView: null,
       context: null
-    }
+    },
+    methods: args.methods
+
   });
   
   if (!args.cssTransitions) {
