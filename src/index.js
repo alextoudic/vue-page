@@ -65,6 +65,9 @@ exports.install = function (Vue, args) {
 
       show: function (path) {
         page(path);
+      },
+      navigate: function (path) {
+        page.redirect(path);
       }
     }
   });
@@ -82,8 +85,7 @@ exports.install = function (Vue, args) {
     data: {
       currentView: null,
       context: null
-    },
-    methods: args.methods
+    }
 
   });
   
