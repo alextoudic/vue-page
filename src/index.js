@@ -2,7 +2,7 @@ var page = require('page');
 
 exports.install = function (Vue, args) {
   Vue.prototype.$navigate = function (path) {
-    page.redirect(path);
+    page(path);
   };
   var Router = Vue.extend({
     created: function () {
