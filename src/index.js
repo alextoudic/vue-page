@@ -1,6 +1,9 @@
 var page = require('page');
 
 exports.install = function (Vue, args) {
+  Vue.prototype.$navigate: function (path) {
+    page.redirect(path);
+  };
   var Router = Vue.extend({
     created: function () {
       if (args.default) {
@@ -65,9 +68,6 @@ exports.install = function (Vue, args) {
 
       show: function (path) {
         page(path);
-      },
-      navigate: function (path) {
-        page.redirect(path);
       }
     }
   });
