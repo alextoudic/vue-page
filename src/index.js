@@ -1,6 +1,9 @@
 var page = require('page');
 
 exports.install = function (Vue, args) {
+  Vue.prototype.$navigate = function (path) {
+    page(path);
+  };
   var Router = Vue.extend({
     created: function () {
       if (args.default) {
@@ -44,7 +47,8 @@ exports.install = function (Vue, args) {
               }
 
               if (args.viewsPath) {
-                var path = args.viewsPath + component + '/index.js';
+                var path = args.viewsPath + component + '/index';
+                var require = args.require ? args.require : require; 
                 Vue.component(component, require(path));
               }
 
@@ -82,6 +86,7 @@ exports.install = function (Vue, args) {
       currentView: null,
       context: null
     }
+
   });
   
   if (!args.cssTransitions) {

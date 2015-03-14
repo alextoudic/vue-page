@@ -10,7 +10,7 @@
   "license": "MIT",
   "devDependencies": {},
   "dependencies": {
-    "page": "^1.4.1"
+    "page": "^1.6.1"
   },
   "repository": {
     "type": "git",
