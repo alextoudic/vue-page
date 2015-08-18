@@ -1,3 +1,5 @@
+# DEPRECATED, YOU SHOULD USE [VUE-ROUTER](https://github.com/vuejs/vue-router) WHICH IS THE OFFICIAL VUEJS' ROUTER
+
 # vue-page
 
 Routing plugin for Vue.js (v0.11). Based on Vue.js Guide about routing and using pagejs.
